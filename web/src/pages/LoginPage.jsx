@@ -1,15 +1,119 @@
+import { useState } from "react";
+import { Link, Navigate, useNavigate, useSearchParams } from "react-router-dom";
+import { Logo } from "../components/PublicLayout.jsx";
+import { Icon } from "../components/ui.jsx";
+import { useAuth } from "../hooks/useAuth.jsx";
+import { api } from "../lib/api.js";
+import { HOME_BY_ROLE, safeNext } from "../lib/access.js";
+import "../public.css";
+
+const POINTS = [
+  "Apply for open spaces and follow your place in the queue",
+  "Flag an allocation that did not follow the published rules",
+  "Your account never appears on the public record"
+];
+
+// Dev-only shortcuts so the role-based UI can be exercised before the auth API exists.
+// import.meta.env.DEV is false in production builds, so this is stripped. The API still verifies every token.
+const DEMO = {
+  vendor: { token: "dev-vendor", user: { name: "Demo Vendor", email: "vendor@example.com", role: "vendor" } },
+  admin: { token: "dev-admin", user: { name: "Demo Admin", email: "admin@example.com", role: "admin" } }
+};
+
 export function LoginPage() {
+  const { signIn, isSignedIn, role } = useAuth();
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const [mode, setMode] = useState("login");
+  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  const next = safeNext(params.get("next"));
+  const landing = (userRole) => next ?? HOME_BY_ROLE[userRole];
+  const isRegister = mode === "register";
+  const set = (key) => (event) => setForm({ ...form, [key]: event.target.value });
+
+  if (isSignedIn) return <Navigate to={landing(role)} replace />;
+
+  async function onSubmit(event) {
+    event.preventDefault();
+    setError("");
+    setBusy(true);
+    try {
+      const { token, user } = isRegister ? await api.register(form) : await api.login({ email: form.email, password: form.password });
+      signIn({ token, user });
+      navigate(landing(user.role), { replace: true });
+    } catch (err) {
+      setError(err.status === 501 ? "This isn't available yet: the account service is still being built." : err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function demo(kind) {
+    signIn(DEMO[kind]);
+    navigate(landing(kind), { replace: true });
+  }
+
   return (
-    <section className="page-section auth-page">
-      <form className="auth-card">
-        <p className="eyebrow">Welcome back</p>
-        <h1>Sign in</h1>
-        <label>Email address<input type="email" autoComplete="email" placeholder="name@example.com" /></label>
-        <label>Password<input type="password" autoComplete="current-password" placeholder="Your password" /></label>
-        <button className="button" type="submit">Sign in</button>
-        <p className="form-note">Vendor registration will be enabled with the authentication service.</p>
-      </form>
-    </section>
+    <div className="pv pv-login">
+      <div className="pv-login-bar">
+        <Link to="/" aria-label="VSAT home"><Logo /></Link>
+        <Link to="/" className="back"><Icon name="arrow" />Back to site</Link>
+      </div>
+
+      <main className="pv-login-grid">
+        <section className="pv-login-copy">
+          <span className="pv-eyebrow"><i />Vendor accounts</span>
+          <h1 className="pv-h1">Apply. Track.<br />Ask the question.</h1>
+          <ul>
+            {POINTS.map((point) => <li key={point}><i><Icon name="check" /></i>{point}</li>)}
+          </ul>
+        </section>
+
+        <form className="pv-glass" onSubmit={onSubmit}>
+          <div className="pv-tabs" role="tablist" aria-label="Account">
+            <button type="button" role="tab" aria-selected={!isRegister} onClick={() => { setMode("login"); setError(""); }}>Sign in</button>
+            <button type="button" role="tab" aria-selected={isRegister} onClick={() => { setMode("register"); setError(""); }}>Create account</button>
+          </div>
+
+          <h2>{isRegister ? "Create your vendor account" : "Welcome back"}</h2>
+          <p className="sub">{isRegister ? "Registration is for vendors. It takes a minute." : "Sign in to continue. Browsing spaces and the public records never needs an account."}</p>
+
+          <div className="pv-form">
+            {isRegister && (
+              <label className="pv-in">Full name
+                <input required autoComplete="name" value={form.fullName} onChange={set("fullName")} placeholder="Your name" />
+              </label>
+            )}
+            <label className="pv-in">Email address
+              <input required type="email" autoComplete="email" value={form.email} onChange={set("email")} placeholder="name@example.com" />
+            </label>
+            <label className="pv-in">Password
+              <input required type="password" minLength={isRegister ? 8 : undefined} autoComplete={isRegister ? "new-password" : "current-password"} value={form.password} onChange={set("password")} placeholder={isRegister ? "At least 8 characters" : "Your password"} />
+            </label>
+
+            {error && <p role="alert" className="pv-alert">{error}</p>}
+
+            <button type="submit" className="pv-btn pv-btn-lime" disabled={busy}>
+              {busy ? "Please wait…" : isRegister ? "Create account" : "Sign in"}
+              <span className="ic"><Icon name="arrow" /></span>
+            </button>
+          </div>
+
+          {import.meta.env.DEV && (
+            <div className="pv-dev">
+              <span>Dev only: skip the API</span>
+              <div className="pv-row">
+                <button type="button" className="pv-btn pv-btn-glass pv-btn-sm" onClick={() => demo("vendor")}>Demo vendor</button>
+                <button type="button" className="pv-btn pv-btn-glass pv-btn-sm" onClick={() => demo("admin")}>Demo admin</button>
+              </div>
+            </div>
+          )}
+          <p className="pv-foot-note">No payment is collected on this platform.</p>
+        </form>
+      </main>
+    </div>
   );
 }
-

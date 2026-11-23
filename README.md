@@ -4,7 +4,7 @@ An initial monorepo scaffold for the SRS-defined platform: a public, auditable r
 
 ## Technology
 
-- `web`: React + Vite, React Router, Leaflet/OpenStreetMap
+- `web`: React + Vite, React Router, Tailwind CSS v4, MapLibre GL JS
 - `api`: Node.js + Express REST API, JWT-ready authentication middleware
 - `database`: PostgreSQL, including an insert-only allocation decision log
 
@@ -19,6 +19,8 @@ cp web/.env.example web/.env
 docker compose up -d postgres
 npm run dev
 ```
+
+The map uses MapLibre GL JS with the keyless OpenFreeMap Bright style (3D buildings), so no map API key is needed. To use a different basemap, change `MAP_STYLE` in `web/src/components/SitesMap.jsx`.
 
 The frontend runs at `http://localhost:5173`; the API runs at `http://localhost:4000`. The frontend proxies `/api` to the API during development.
 

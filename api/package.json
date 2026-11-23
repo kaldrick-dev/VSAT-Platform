@@ -6,10 +6,11 @@
   "scripts": {
     "dev": "node --watch src/server.js",
     "start": "node src/server.js",
-    "test": "node --test",
+    "test": "DATABASE_URL=postgresql://vsat:vsat@localhost:5433/vsat_test NODE_ENV=test node --test --test-concurrency=1",
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
-    "db:seed": "node prisma/seed.js"
+    "db:seed": "node prisma/seed.js",
+    "test:setup": "DATABASE_URL=postgresql://vsat:vsat@localhost:5433/vsat_test prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",
@@ -17,6 +18,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^7.5.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
