@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
+import { allocationsRoutes } from "../modules/allocations/allocations.routes.js";
 import { applicationsRoutes } from "../modules/applications/applications.routes.js";
 import { documentsRoutes } from "../modules/documents/documents.routes.js";
 import { flagsRoutes } from "../modules/flags/flags.routes.js";
@@ -17,10 +18,7 @@ apiRouter.use(applicationsRoutes);
 apiRouter.use("/profile", profileRoutes);
 apiRouter.use(documentsRoutes);
 apiRouter.use(flagsRoutes);
-
-apiRouter.get("/allocations", (_req, res) => {
-  res.json({ data: [], meta: { total: 0 } });
-});
+apiRouter.use(allocationsRoutes);
 
 apiRouter.get("/dashboard/outcomes", (_req, res) => {
   res.json({ data: [], meta: { filters: {} } });
