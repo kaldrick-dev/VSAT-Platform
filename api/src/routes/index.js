@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
 import { applicationsRoutes } from "../modules/applications/applications.routes.js";
 import { documentsRoutes } from "../modules/documents/documents.routes.js";
+import { flagsRoutes } from "../modules/flags/flags.routes.js";
 import { profileRoutes } from "../modules/profile/profile.routes.js";
 import { sitesRoutes } from "../modules/sites/sites.routes.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
