@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import { Button, Chip, Icon, Page, PageHeader, Ring } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { useSites } from "../hooks/useSites.js";
-import { adminFlagsSeed, adminQueue } from "../data/workspace.js";
 import { useApi } from "../hooks/useApi.js";
 import { api } from "../lib/api.js";
 import { formatDateTime } from "../lib/format.js";
@@ -152,16 +151,18 @@ function VendorOverview({ name }) {
 
 function AdminOverview({ name }) {
   const { sites } = useSites();
-  const openFlags = adminFlagsSeed.filter((f) => f.status === "Open");
+  const call = useCallback(() => Promise.all([api.listApplications({ status: "pending" }), api.listFlags({ status: "open" })])
+    .then(([applications, flags]) => ({ queue: applications.data, openFlags: flags.data })), []);
+  const { data: { queue, openFlags } } = useApi(call, { queue: [], openFlags: [] });
   const counts = { available: 0, allocated: 0, inactive: 0 };
   sites.forEach((s) => { counts[s.status] += 1; });
-  const missingDocs = adminQueue.filter((a) => a.docs !== "Complete").length;
+  const noDocs = queue.filter((a) => !a.vendor._count.documents).length;
   return (
     <Page>
       <PageHeader title={`Welcome, ${name}`} description="What needs your attention: the oldest applications, open flags and the state of every listed space." actions={<Button to="/admin">Review queue<Icon name="arrow" className="size-4" /></Button>} />
 
       <Tiles>
-        <Tile label="Pending applications" value={13} delta={missingDocs ? `${missingDocs} missing documents` : undefined} tone="down" />
+        <Tile label="Pending applications" value={queue.length} delta={noDocs ? `${noDocs} without documents` : undefined} tone="down" />
         <Tile label="Open spaces" value={counts.available} delta={`of ${sites.length} listed`} tone="up" />
         <Tile label="Allocated" value={counts.allocated} />
         <Tile label="Flags awaiting review" value={openFlags.length} tone={openFlags.length ? "down" : "flat"} />
@@ -170,19 +171,20 @@ function AdminOverview({ name }) {
       <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
         <div className="grid gap-4">
           <Panel title="Oldest pending applications" description="Positions are fixed by submission time." action={<Button variant="ghost" size="sm" to="/admin">Open queue</Button>}>
-            {adminQueue.slice(0, 4).map((a, i) => (
-              <Row key={a.ref} to="/admin"
-                primary={<><span className="mr-2 font-mono text-[11px] text-faint">{i + 1}</span>{a.site}</>}
-                secondary={`${a.ref} · ${a.trade} · ${a.submitted}`}
-                end={<Chip tone={a.docs === "Complete" ? "good" : "bad"}>{a.docs}</Chip>} />
+            {queue.slice(0, 4).map((a, i) => (
+              <Row key={a.id} to="/admin"
+                primary={<><span className="mr-2 font-mono text-[11px] text-faint">{i + 1}</span>{a.site.name}</>}
+                secondary={`${a.vendor.trade ?? "Trade not given"} · ${formatDateTime(a.appliedAt)}`}
+                end={<Chip tone={a.vendor._count.documents ? "good" : "bad"}>{a.vendor._count.documents ? "Documents" : "No documents"}</Chip>} />
             ))}
+            {!queue.length && <p className="px-3.5 py-3 text-[13px] text-mute">No applications are waiting.</p>}
           </Panel>
           <RecentUpdates role="admin" />
         </div>
         <div className="grid gap-4">
           <Panel title="Flags awaiting review" action={<Button variant="ghost" size="sm" to="/admin/flags">Review</Button>}>
             {openFlags.length ? openFlags.map((f) => (
-              <Row key={f.id} to="/admin/flags" primary={`${f.id} · ${f.category}`} secondary={`On ${f.event} · ${f.site} · raised ${f.date}`} end={<Chip tone="warn">Open</Chip>} />
+              <Row key={f.id} to="/admin/flags" primary={f.category} secondary={`${f.allocation.site.name} · raised ${formatDateTime(f.createdAt)}`} end={<Chip tone="warn">Open</Chip>} />
             )) : <p className="px-3.5 py-3 text-[13px] text-mute">No flags are waiting.</p>}
           </Panel>
           <Panel title="Spaces by status">

@@ -58,6 +58,16 @@ test("vendor sees their own entry", async () => {
   assert.ok(res.body.data.some((a) => a.id === allocationId));
 });
 
+test("vendor does not see who decided", async () => {
+  const res = await request(app).get("/api/v1/allocations").set("Authorization", `Bearer ${vendor1Token}`);
+  assert.equal(res.body.data[0].decidedById, undefined);
+});
+
+test("admin sees who decided", async () => {
+  const res = await request(app).get("/api/v1/allocations").set("Authorization", `Bearer ${adminToken}`);
+  assert.equal(res.body.data.find((a) => a.id === allocationId).decidedBy, "Admin");
+});
+
 test("vendor does not see another vendor's entry", async () => {
   const res = await request(app).get("/api/v1/allocations").set("Authorization", `Bearer ${vendor2Token}`);
   assert.equal(res.body.data.length, 0);

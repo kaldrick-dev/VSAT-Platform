@@ -38,7 +38,7 @@ export const listAll = (filters) =>
     where: filters,
     include: {
       site: { select: { name: true, reference: true } },
-      vendor: { select: { fullName: true, email: true } }
+      vendor: { select: { id: true, fullName: true, email: true, trade: true, _count: { select: { documents: true } } } }
     },
     orderBy: { appliedAt: "asc" }
   });
