@@ -12,15 +12,6 @@ apiRouter.use("/auth", authRoutes);
 apiRouter.use("/sites", sitesRoutes);
 apiRouter.use(applicationsRoutes);
 
-// Admin queue view: pending applications per site, oldest first, with vendor identity.
-apiRouter.get("/applications", requireAuth, requireRole("admin"), (_req, res) => {
-  res.json({ data: [], meta: { total: 0 } });
-});
-
-apiRouter.post("/allocations", requireAuth, requireRole("admin"), (_req, res) => {
-  res.status(501).json({ message: "Allocation decision endpoint scaffolded" });
-});
-
 apiRouter.get("/allocations", (_req, res) => {
   res.json({ data: [], meta: { total: 0 } });
 });
