@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { requireAuth, requireRole } from "../middleware/auth.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
 import { allocationsRoutes } from "../modules/allocations/allocations.routes.js";
 import { applicationsRoutes } from "../modules/applications/applications.routes.js";
@@ -23,7 +22,3 @@ apiRouter.use(documentsRoutes);
 apiRouter.use(flagsRoutes);
 apiRouter.use("/notifications", notificationsRoutes);
 apiRouter.use(allocationsRoutes);
-
-apiRouter.get("/dashboard/outcomes", (_req, res) => {
-  res.json({ data: [], meta: { filters: {} } });
-});

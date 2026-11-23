@@ -24,31 +24,26 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | Endpoint | Auth | Roles | Notes |
 |---|---|---|---|
 | `GET /health` | no | any | |
-| `POST /auth/register` | no | any | Always creates a `vendor`. Admins are provisioned out of band; never accept `role` from the body |
-| `POST /auth/login` | no | any | Returns `{ token, user: { id, name, email, role } }` |
+| `POST /auth/register` | no | any | Always creates a `vendor`; `role` in the body is ignored |
+| `POST /auth/login` | no | any | Returns `{ token, user }` |
 | `GET /auth/me` | yes | any | |
-| `GET /sites` | no | any | FR 1.2. Supports `status`, `district` filters |
-| `POST /sites` | yes | admin | FR 1.1, 1.3 |
-| `POST /sites/:id/applications` | yes | vendor | FR 2.1. One pending application per vendor per site |
-| `GET /applications/me` | yes | vendor | Own applications only, each with `queuePosition` (FR 2.2) |
-| `GET /applications` | yes | admin | Full queue, oldest first, with vendor identity |
-| `POST /allocations` | yes | admin | FR 3.1. Insert-only (FR 3.2) |
-| `GET /allocations` | no | any | Public activity log: space, event, date only. Never reason, application or vendor (see below) |
-| `GET /dashboard/outcomes` | no | any | Anonymized outcomes by site/district. Filters: district, status, date range (FR 4.2) |
-| `GET /exports/:dataset.csv` (planned) | no | any | Backs the downloads on `/records`: `decisions`, `sites`, `flags`. Same anonymization as the JSON endpoints |
-| `GET /flags` | no | any | FR 5.2. Public flag log |
-| `POST /allocations/:id/flags` | yes | vendor | FR 5.1 |
-
-## Endpoints the workspace pages need (not built yet)
-
-| Endpoint | Roles | Used by |
-|---|---|---|
-| `GET/PUT /me`, `GET/POST /me/documents` | vendor | Profile & documents |
-| `GET /flags/me` | vendor | My flags |
-| `GET /flags/review`, `PATCH /flags/:id` (status + public outcome note) | admin | Flag review |
-| `GET /allocations/log` (reasons, applications, deciding admin) | admin | Decision log |
-| `PATCH /sites/:id` (pause / reopen) | admin | Manage sites |
-| `GET /notifications`, `PATCH /notifications/:id/read` | vendor, admin | Notifications, header bell |
+| `GET /sites`, `GET /sites/:id` | no | any | Filters: `district`, `type`, `status` |
+| `POST /sites`, `PATCH /sites/:id` | yes | admin | |
+| `POST /sites/:siteId/applications` | yes | vendor | One application per vendor per site; site must be `available` |
+| `GET /applications/me` | yes | vendor | Own applications with `queuePosition` |
+| `GET /applications` | yes | admin | Queue, oldest first, with vendor identity. Filters: `siteId`, `status` |
+| `PATCH /applications/:id` | yes | admin | `{ outcome: approved or rejected, reason }`. Writes an allocation entry and notifies the vendor |
+| `GET /allocations` | yes | admin, vendor | Admin: full log. Vendor: own entries only. Insert-only |
+| `POST /allocations/:allocationId/flags` | yes | vendor | `{ category, note }` |
+| `GET /flags/me` | yes | vendor | |
+| `GET /flags` | yes | admin | Filter: `status` |
+| `PATCH /flags/:id` | yes | admin | `{ status: upheld or dismissed, reviewNote }`. Notifies the vendor |
+| `GET /notifications` | yes | any | Own, with `unread` count |
+| `PATCH /notifications/:id/read`, `POST /notifications/read-all` | yes | any | |
+| `GET/PATCH /profile` | yes | vendor | |
+| `GET/POST /documents`, `DELETE /documents/:id` | yes | vendor | Own documents |
+| `GET /vendors/:id/documents` | yes | admin | |
+| `GET /public/spaces`, `/public/activity`, `/public/flags` | no | any | Spaces and events only. `?format=csv` downloads CSV |
 
 ## Field exposure (NFR 7)
 
@@ -65,8 +60,3 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | Flag: free-text reason written by the vendor | **no** | own only | yes |
 | Flag: `submitted_by` | **no** | own only | yes |
 | User email, password hash | no | own email only | never the hash |
-
-## Open decisions
-
-- Who resolves flags (`PATCH /flags/:id`)? Appendix B leaves this to design; it should be admin-only and write a resolution note.
-- Appendix B names `POST /applications`, `/decisions`, `/flags`; the scaffold uses nested paths. The scaffold paths are kept in `web/src/lib/api.js`.
