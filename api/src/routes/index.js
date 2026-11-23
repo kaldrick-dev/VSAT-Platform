@@ -15,6 +15,7 @@ apiRouter.use("/sites", sitesRoutes);
 apiRouter.use(applicationsRoutes);
 apiRouter.use("/profile", profileRoutes);
 apiRouter.use(documentsRoutes);
+apiRouter.use(flagsRoutes);
 
 apiRouter.get("/allocations", (_req, res) => {
   res.json({ data: [], meta: { total: 0 } });
@@ -23,12 +24,3 @@ apiRouter.get("/allocations", (_req, res) => {
 apiRouter.get("/dashboard/outcomes", (_req, res) => {
   res.json({ data: [], meta: { filters: {} } });
 });
-
-apiRouter.get("/flags", (_req, res) => {
-  res.json({ data: [], meta: { total: 0 } });
-});
-
-apiRouter.post("/allocations/:allocationId/flags", requireAuth, requireRole("vendor"), (_req, res) => {
-  res.status(501).json({ message: "Allocation flag endpoint scaffolded" });
-});
-
