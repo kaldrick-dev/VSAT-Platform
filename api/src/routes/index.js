@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
+import { authLimiter } from "../middleware/rate-limit.js";
+import { healthRoutes } from "../modules/health/health.routes.js";
 
 export const apiRouter = Router();
 
-apiRouter.get("/health", (_req, res) => {
-  res.json({ status: "ok", service: "vsat-api" });
-});
+apiRouter.use("/health", healthRoutes);
+apiRouter.use("/auth", authLimiter);
 
 apiRouter.post("/auth/register", (_req, res) => {
   res.status(501).json({ message: "Vendor registration endpoint scaffolded" });

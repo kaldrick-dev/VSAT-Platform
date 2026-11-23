@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/*
+ * VSAT design tokens.
+ * Components use semantic utilities (bg-surface, text-mute, border-line, …).
+ * The workspace is light only. Palette: black, white and green; blue marks "allocated".
+ */
+:root {
+  --c-canvas: #ffffff;
+  --c-frame: #f5f6f8;
+  --c-sunken: rgb(11 12 14 / 0.05);
+  --c-surface: #ffffff;
+  --c-ink: #0b0c0e;
+  --c-mute: #4a5163;
+  --c-faint: #6b7285;
+  --c-line: rgb(11 12 14 / 0.11);
+  /* brand green: dark on light surfaces, lime on ink/green */
+  --c-accent: #0f3f26;
+  --c-accent-soft: #eaf7ee;
+  --c-lime: #a3ffb0;
+
+  --c-good: #0f5a2b;
+  --c-good-soft: #e3f8e8;
+  --c-warn: #a15c07;
+  --c-warn-soft: #fdf1d9;
+  --c-bad: #c2362b;
+  --c-bad-soft: #fde9e7;
+  --c-info: #1d4ed8;
+  --c-info-soft: #e3ecff;
+  --c-idle: #565d6e;
+  --c-idle-soft: #e7e8ee;
+
+
+  color-scheme: light;
+}
+
+
+@theme inline {
+  --font-logo: "Bruno Ace SC", sans-serif;
+  --color-canvas: var(--c-canvas);
+  --color-frame: var(--c-frame);
+  --color-sunken: var(--c-sunken);
+  --color-surface: var(--c-surface);
+  --color-ink: var(--c-ink);
+  --color-mute: var(--c-mute);
+  --color-faint: var(--c-faint);
+  --color-line: var(--c-line);
+  --color-accent: var(--c-accent);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-lime: var(--c-lime);
+  --color-good: var(--c-good);
+  --color-good-soft: var(--c-good-soft);
+  --color-warn: var(--c-warn);
+  --color-warn-soft: var(--c-warn-soft);
+  --color-bad: var(--c-bad);
+  --color-bad-soft: var(--c-bad-soft);
+  --color-info: var(--c-info);
+  --color-info-soft: var(--c-info-soft);
+  --color-idle: var(--c-idle);
+  --color-idle-soft: var(--c-idle-soft);
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, SFMono-Regular, monospace;
+
+  --shadow-card: 0 1px 2px rgb(10 10 30 / 0.08), 0 10px 24px -12px rgb(30 10 70 / 0.3);
+  --shadow-float: 0 2px 4px rgb(10 10 30 / 0.06), 0 22px 56px -14px rgb(30 10 70 / 0.35);
+  --shadow-frame: 0 40px 100px -40px rgb(30 10 70 / 0.45);
+}
+
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--c-canvas);
+  color: var(--c-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--c-accent);
+    outline-offset: 2px;
+  }
+  ::selection {
+    background: var(--c-accent-soft);
+  }
+}
+
+/* Brand surfaces shared with the public site */
+.brand-title {
+  background: linear-gradient(100deg, #0b0c0e 0%, #0b0c0e 45%, #7a8191 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* MapLibre chrome: sharp, on-theme */
+.maplibregl-ctrl-attrib {
+  background: color-mix(in srgb, var(--c-surface) 85%, transparent) !important;
+  color: var(--c-mute) !important;
+  font-size: 10px !important;
+}
+.maplibregl-ctrl-attrib a {
+  color: inherit !important;
+}
+.maplibregl-popup-content {
+  border-radius: 8px !important;
+  background: var(--c-ink) !important;
+  color: var(--c-surface) !important;
+  padding: 6px 10px !important;
+  font: 500 12px var(--font-sans) !important;
+  box-shadow: var(--shadow-float) !important;
+}
+.maplibregl-popup-tip {
+  display: none !important;
+}
