@@ -1,10 +1,10 @@
 import { Suspense, lazy } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { DownloadButtons, datasetMeta } from "../components/DocumentActions.jsx";
+import { DownloadButtons, datasetMeta, latestDate } from "../components/DocumentActions.jsx";
 import { Icon } from "../components/ui.jsx";
 import { DATASETS } from "../data/datasets.js";
-import { formatDate, statusLog } from "../data/records.js";
 import { formatRwf } from "../data/sites.js";
+import { usePublicData } from "../hooks/usePublicData.js";
 import { useSites } from "../hooks/useSites.js";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { HOME_BY_ROLE, ROLES } from "../lib/access.js";
@@ -12,10 +12,10 @@ import { HOME_BY_ROLE, ROLES } from "../lib/access.js";
 // The map pulls in MapLibre, so load it after the hero has painted.
 const SitesExplorer = lazy(() => import("../components/SitesExplorer.jsx"));
 
-const buildSteps = (open) => [
+const buildSteps = (open, entries) => [
   { icon: "map", step: "Step 01", title: "Browse verified sites", body: "See location, availability, fees and terms before you apply. No account needed.", big: `${open}`, unit: "spaces open now" },
   { icon: "clock", step: "Step 02", title: "Apply and track your place", body: "Every application is timestamped, so queue order stays visible and can be checked.", big: "#1", unit: "your place in line, always visible", rec: true },
-  { icon: "record", step: "Step 03", title: "Check every outcome", body: "Every listing and allocation is dated on the public log. Nothing is edited, and applicant details stay private.", big: `${statusLog.length}`, unit: "entries on the public log" }
+  { icon: "record", step: "Step 03", title: "Check every outcome", body: "Every listing and allocation is dated on the public log. Nothing is edited, and applicant details stay private.", big: `${entries}`, unit: "entries on the public log" }
 ];
 
 const ROLES_INFO = [
@@ -27,8 +27,10 @@ export function HomePage() {
   const { isSignedIn, role } = useAuth();
   const [params] = useSearchParams();
   const { sites } = useSites();
+  const data = usePublicData();
+  const updated = latestDate(data.activity, data.flags);
   const OPEN = sites.filter((site) => site.status === "available");
-  const STEPS = buildSteps(OPEN.length);
+  const STEPS = buildSteps(OPEN.length, data.activity.length);
 
   return (
     <>
@@ -111,7 +113,7 @@ export function HomePage() {
                 <div className="tag"><span className="sheet"><Icon name="record" className="size-5" /></span><span>Dataset</span></div>
                 <h3 className="pv-h3">{d.title}</h3>
                 <p>{d.description}</p>
-                <span className="meta">{datasetMeta(d)}</span>
+                <span className="meta">{datasetMeta(data[d.key], updated)}</span>
                 <div className="pv-row"><DownloadButtons dataset={d} /></div>
               </article>
             ))}

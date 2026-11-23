@@ -1,20 +1,22 @@
 import { Icon } from "./ui.jsx";
-import { formatDate, lastUpdated } from "../data/records.js";
-import { downloadFile, toCsv } from "../lib/download.js";
+import { formatDate } from "../data/records.js";
+import { publicUrl } from "../lib/api.js";
 
 export function DownloadButtons({ dataset, className = "pv-btn pv-btn-line pv-btn-sm" }) {
   return (
     <>
-      <button type="button" className={className} aria-label={`Download ${dataset.title} as CSV`}
-        onClick={() => downloadFile(`vsat-${dataset.key}.csv`, toCsv(dataset.rows, dataset.columns), "text/csv")}>
+      <a className={className} href={publicUrl(dataset.key, "csv")} download aria-label={`Download ${dataset.title} as CSV`}>
         CSV <Icon name="arrow" className="rotate-90" />
-      </button>
-      <button type="button" className={className} aria-label={`Download ${dataset.title} as JSON`}
-        onClick={() => downloadFile(`vsat-${dataset.key}.json`, JSON.stringify(dataset.rows, null, 2), "application/json")}>
+      </a>
+      <a className={className} href={publicUrl(dataset.key, "json")} download aria-label={`Download ${dataset.title} as JSON`}>
         JSON <Icon name="arrow" className="rotate-90" />
-      </button>
+      </a>
     </>
   );
 }
 
-export const datasetMeta = (dataset) => `${dataset.rows.length} records · Updated ${formatDate(lastUpdated)}`;
+export const datasetMeta = (rows, updated) =>
+  `${rows.length} records${updated ? ` · Updated ${formatDate(updated)}` : ""}`;
+
+export const latestDate = (...lists) =>
+  lists.flat().reduce((latest, row) => (row.date && row.date > latest ? row.date : latest), "");

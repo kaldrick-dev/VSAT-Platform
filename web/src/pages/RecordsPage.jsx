@@ -1,19 +1,23 @@
 import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { DownloadButtons, datasetMeta } from "../components/DocumentActions.jsx";
+import { DownloadButtons, datasetMeta, latestDate } from "../components/DocumentActions.jsx";
 import { PvSelect } from "../components/PvSelect.jsx";
 import { Icon } from "../components/ui.jsx";
 import { DATASETS } from "../data/datasets.js";
-import { flags, formatDate, lastUpdated, statusLog } from "../data/records.js";
-import { districts, formatRwf, sites } from "../data/sites.js";
+import { formatDate } from "../data/records.js";
+import { districts, formatRwf } from "../data/sites.js";
+import { shortId, usePublicData } from "../hooks/usePublicData.js";
 
 const STATUS = { available: ["good", "Available"], allocated: ["info", "Allocated"], inactive: ["idle", "Paused"] };
-const EVENT_TONE = { Listed: "good", Allocated: "info", Paused: "idle" };
-const FLAG_TONE = { Open: "warn", "Under review": "info", Resolved: "good", Dismissed: "idle" };
+const EVENT_TONE = { Allocated: "info", Revoked: "idle" };
+const FLAG_TONE = { open: "warn", upheld: "good", dismissed: "idle" };
+const FLAG_LABEL = { open: "Open", upheld: "Upheld", dismissed: "Dismissed" };
 const ORDER = { available: 0, allocated: 1, inactive: 2 };
 
 export function RecordsPage() {
   const [params] = useSearchParams();
+  const { spaces: sites, activity: statusLog, flags, loading, error } = usePublicData();
+  const lastUpdated = latestDate(statusLog, flags);
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [status, setStatus] = useState("all");
   const [district, setDistrict] = useState("all");
@@ -26,7 +30,7 @@ export function RecordsPage() {
         (district === "all" || s.district === district) &&
         (!q || [s.reference, s.name, s.district, s.sector, s.type, STATUS[s.status][1]].some((text) => text.toLowerCase().includes(q))))
       .sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.name.localeCompare(b.name));
-  }, [search, status, district]);
+  }, [sites, search, status, district]);
 
   const openCount = sites.filter((s) => s.status === "available").length;
 
@@ -37,7 +41,7 @@ export function RecordsPage() {
           <nav className="pv-crumbs" aria-label="Breadcrumb"><Link to="/">Home</Link> / <span aria-current="page">Public records</span></nav>
           <h1 className="pv-h1">Public records</h1>
           <p className="lead">Which vending spaces are open, what they cost, and every change to their status. Open to everyone, no account needed. Information about individual vendors and applicants is never published.</p>
-          <span className="pv-stamp"><i />{openCount} spaces open now · Updated {formatDate(lastUpdated)}</span>
+          <span className="pv-stamp"><i />{loading ? "Loading records…" : error ? "Records unavailable" : `${openCount} spaces open now${lastUpdated ? ` · Updated ${formatDate(lastUpdated)}` : ""}`}</span>
           <div className="pv-jump">
             <a href="#spaces" className="pv-btn pv-btn-glass pv-btn-sm">Available spaces</a>
             <a href="#activity" className="pv-btn pv-btn-glass pv-btn-sm">Activity log</a>
@@ -82,7 +86,7 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
-            {!filtered.length && <p className="pv-empty">No spaces match. Try a different search or clear the filters.</p>}
+            {!filtered.length && <p className="pv-empty">{error || (loading ? "Loading…" : "No spaces match. Try a different search or clear the filters.")}</p>}
           </div>
           <p className="pv-note">Showing {filtered.length} of {sites.length} spaces. <Link to="/#map" className="underline underline-offset-4">See them on the map</Link>.</p>
         </div>
@@ -100,19 +104,19 @@ export function RecordsPage() {
           <div className="pv-table-wrap pv-rv">
             <table className="pv-table">
               <caption className="sr-only">Changes to vending spaces, newest first</caption>
-              <thead><tr>{["Reference", "Date", "Space", "Event", "Note"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
+              <thead><tr>{["Reference", "Date", "Space", "Event"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
               <tbody>
                 {statusLog.map((e) => (
                   <tr key={e.id}>
-                    <th scope="row">{e.id}</th>
+                    <th scope="row">{shortId("EV", e.id)}</th>
                     <td style={{ whiteSpace: "nowrap" }}>{formatDate(e.date)}</td>
                     <td><b>{e.site}</b><span className="sub">{e.district}</span></td>
                     <td><span className={`pv-pill ${EVENT_TONE[e.event]}`}>{e.event}</span></td>
-                    <td style={{ maxWidth: "40ch" }}>{e.note}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
+            {!statusLog.length && <p className="pv-empty">{error || (loading ? "Loading…" : "No allocations yet.")}</p>}
           </div>
         </div>
       </section>
@@ -133,11 +137,11 @@ export function RecordsPage() {
               <tbody>
                 {flags.map((f) => (
                   <tr key={f.id}>
-                    <th scope="row">{f.id}</th>
-                    <td className="mono">{f.event}</td>
+                    <th scope="row">{shortId("FL", f.id)}</th>
+                    <td className="mono">{shortId("EV", f.allocationId)}</td>
                     <td style={{ whiteSpace: "nowrap" }}>{formatDate(f.date)}</td>
-                    <td>{f.category}{f.note && <span className="sub">{f.note}</span>}</td>
-                    <td><span className={`pv-pill ${FLAG_TONE[f.status]}`}>{f.status}</span></td>
+                    <td>{f.category}</td>
+                    <td><span className={`pv-pill ${FLAG_TONE[f.status]}`}>{FLAG_LABEL[f.status]}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -161,7 +165,7 @@ export function RecordsPage() {
               <article key={d.key} className="pv-docrow">
                 <div className="l">
                   <span className="sheet"><Icon name="record" className="size-5" /></span>
-                  <div><h3>{d.title}</h3><p>{d.description}</p><div className="meta">{datasetMeta(d)}</div></div>
+                  <div><h3>{d.title}</h3><p>{d.description}</p><div className="meta">{datasetMeta(d.key === "spaces" ? sites : d.key === "activity" ? statusLog : flags, lastUpdated)}</div></div>
                 </div>
                 <div className="pv-row"><DownloadButtons dataset={d} className="pv-btn pv-btn-glass pv-btn-sm" /></div>
               </article>

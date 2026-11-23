@@ -70,6 +70,11 @@ test("downloads a CSV", async () => {
   assert.match(res.text, /"reference"/);
 });
 
+test("downloads JSON when the format is asked for", async () => {
+  const res = await request(app).get("/api/v1/public/flags?format=json");
+  assert.match(res.headers["content-disposition"], /flags\.json/);
+});
+
 test("rejects an unknown format", async () => {
   const res = await request(app).get("/api/v1/public/spaces?format=xml");
   assert.equal(res.status, 400);
