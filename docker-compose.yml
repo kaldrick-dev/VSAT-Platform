@@ -6,10 +6,9 @@ services:
       POSTGRES_USER: vsat
       POSTGRES_PASSWORD: vsat
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - vsat_postgres_data:/var/lib/postgresql/data
-      - ./api/src/db/migrations:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U vsat -d vsat"]
       interval: 5s
