@@ -27,6 +27,15 @@ apiRouter.post("/sites/:siteId/applications", requireAuth, requireRole("vendor")
   res.status(501).json({ message: "Application submission endpoint scaffolded" });
 });
 
+apiRouter.get("/auth/me", requireAuth, (req, res) => {
+  res.json({ data: { id: req.user.sub, role: req.user.role } });
+});
+
+// Admin queue view: pending applications per site, oldest first, with vendor identity.
+apiRouter.get("/applications", requireAuth, requireRole("admin"), (_req, res) => {
+  res.json({ data: [], meta: { total: 0 } });
+});
+
 apiRouter.get("/applications/me", requireAuth, requireRole("vendor"), (_req, res) => {
   res.json({ data: [] });
 });
@@ -47,7 +56,7 @@ apiRouter.get("/flags", (_req, res) => {
   res.json({ data: [], meta: { total: 0 } });
 });
 
-apiRouter.post("/allocations/:allocationId/flags", requireAuth, (_req, res) => {
+apiRouter.post("/allocations/:allocationId/flags", requireAuth, requireRole("vendor"), (_req, res) => {
   res.status(501).json({ message: "Allocation flag endpoint scaffolded" });
 });
 

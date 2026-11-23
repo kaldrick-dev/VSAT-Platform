@@ -1,19 +1,17 @@
 import { app } from "./app.js";
 import { env } from "./config/env.js";
-import { pool } from "./db/pool.js";
+import { prisma } from "./lib/prisma.js";
 
 const server = app.listen(env.PORT, () => {
   console.log(`VSAT API listening on http://localhost:${env.PORT}`);
 });
 
-async function shutdown(signal) {
-  console.log(`${signal} received; shutting down`);
+const shutdown = () => {
   server.close(async () => {
-    await pool.end();
+    await prisma.$disconnect();
     process.exit(0);
   });
-}
+};
 
-process.on("SIGINT", () => shutdown("SIGINT"));
-process.on("SIGTERM", () => shutdown("SIGTERM"));
-
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
