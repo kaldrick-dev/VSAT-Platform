@@ -5,6 +5,7 @@ import { allocationsRoutes } from "../modules/allocations/allocations.routes.js"
 import { applicationsRoutes } from "../modules/applications/applications.routes.js";
 import { documentsRoutes } from "../modules/documents/documents.routes.js";
 import { flagsRoutes } from "../modules/flags/flags.routes.js";
+import { notificationsRoutes } from "../modules/notifications/notifications.routes.js";
 import { profileRoutes } from "../modules/profile/profile.routes.js";
 import { sitesRoutes } from "../modules/sites/sites.routes.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
@@ -18,6 +19,7 @@ apiRouter.use(applicationsRoutes);
 apiRouter.use("/profile", profileRoutes);
 apiRouter.use(documentsRoutes);
 apiRouter.use(flagsRoutes);
+apiRouter.use("/notifications", notificationsRoutes);
 apiRouter.use(allocationsRoutes);
 
 apiRouter.get("/dashboard/outcomes", (_req, res) => {
