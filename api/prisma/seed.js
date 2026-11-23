@@ -1,4 +1,5 @@
 // Fills a local database with demo users and the sites shown in the web app.
+import "dotenv/config";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma.js";
 
