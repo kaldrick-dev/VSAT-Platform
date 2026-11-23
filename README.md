@@ -52,3 +52,15 @@ web/
 ```
 
 Postgres runs on port 5433 (see `docker-compose.yml`). Seed logins: `admin@example.com` and `vendor@example.com`, password `password123`. API endpoints and who can call them are listed in `docs/ACCESS.md`.
+
+## Deploy on Vercel (web and API together)
+
+One Vercel project serves the web app as static files and the Express API as a serverless function at `/api/v1`. Both share one origin, so no CORS setup is needed. `vercel.json` defines this.
+
+1. Import the repository in Vercel. Keep the root directory as the repo root and the framework preset as "Other". The build settings come from `vercel.json`.
+2. Add environment variables: `DATABASE_URL` (a hosted Postgres such as Neon; prefer the pooled connection string) and `JWT_SECRET` (at least 32 random characters, required in production). Optional: `JWT_EXPIRES_IN`.
+3. Create the tables once, from your machine, with the production `DATABASE_URL` in `api/.env`: `npm run db:migrate:deploy -w @vsat/api`. Optionally seed demo data with `npm run db:seed -w @vsat/api`, but change the demo passwords first.
+4. Deploy. The web app calls `/api/v1/...` on the same domain.
+
+`prisma generate` runs on install, and the schema includes the Linux binary target Vercel needs.
+
