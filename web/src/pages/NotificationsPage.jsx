@@ -1,10 +1,8 @@
 import { Button, Card, Chip, EmptyState, Page, PageHeader } from "../components/ui.jsx";
-import { useAuth } from "../hooks/useAuth.jsx";
 import { useNotifications } from "../hooks/useNotifications.js";
 
 export function NotificationsPage() {
-  const { role } = useAuth();
-  const { items, unread, markRead, markAllRead } = useNotifications(role);
+  const { items, unread, markRead, markAllRead } = useNotifications();
   return (
     <Page>
       <PageHeader

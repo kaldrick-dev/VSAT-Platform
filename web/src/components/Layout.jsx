@@ -37,7 +37,7 @@ export function Layout() {
   const navigate = useNavigate();
   const { user, role, isSignedIn, signOut } = useAuth();
   const navGroups = navGroupsFor(role);
-  const { unread } = useNotifications(role);
+  const { unread } = useNotifications();
 
   useEffect(() => {
     function onKeyDown(event) {
