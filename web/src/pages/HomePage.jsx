@@ -4,17 +4,16 @@ import { DownloadButtons, datasetMeta } from "../components/DocumentActions.jsx"
 import { Icon } from "../components/ui.jsx";
 import { DATASETS } from "../data/datasets.js";
 import { formatDate, statusLog } from "../data/records.js";
-import { formatRwf, sites } from "../data/sites.js";
+import { formatRwf } from "../data/sites.js";
+import { useSites } from "../hooks/useSites.js";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { HOME_BY_ROLE, ROLES } from "../lib/access.js";
 
 // The map pulls in MapLibre, so load it after the hero has painted.
 const SitesExplorer = lazy(() => import("../components/SitesExplorer.jsx"));
 
-const OPEN = sites.filter((site) => site.status === "available");
-
-const STEPS = [
-  { icon: "map", step: "Step 01", title: "Browse verified sites", body: "See location, availability, fees and terms before you apply. No account needed.", big: `${OPEN.length}`, unit: "spaces open now" },
+const buildSteps = (open) => [
+  { icon: "map", step: "Step 01", title: "Browse verified sites", body: "See location, availability, fees and terms before you apply. No account needed.", big: `${open}`, unit: "spaces open now" },
   { icon: "clock", step: "Step 02", title: "Apply and track your place", body: "Every application is timestamped, so queue order stays visible and can be checked.", big: "#1", unit: "your place in line, always visible", rec: true },
   { icon: "record", step: "Step 03", title: "Check every outcome", body: "Every listing and allocation is dated on the public log. Nothing is edited, and applicant details stay private.", big: `${statusLog.length}`, unit: "entries on the public log" }
 ];
@@ -27,16 +26,19 @@ const ROLES_INFO = [
 export function HomePage() {
   const { isSignedIn, role } = useAuth();
   const [params] = useSearchParams();
+  const { sites } = useSites();
+  const OPEN = sites.filter((site) => site.status === "available");
+  const STEPS = buildSteps(OPEN.length);
 
   return (
     <>
       <section className="pv-hero" aria-labelledby="hero-h">
-        <Link to="/records#spaces" className="pv-float" aria-label={`Open now: ${OPEN[0].name}`}>
+        {OPEN[0] && <Link to="/records#spaces" className="pv-float" aria-label={`Open now: ${OPEN[0].name}`}>
           <div className="row"><span>Open now</span><span className="pv-pill good">Available</span></div>
           <h3>{OPEN[0].name}</h3>
           <p>{OPEN[0].sector}, {OPEN[0].district} · {OPEN[0].size.replace(" ", "\u00A0")} · {OPEN[0].type}</p>
           <div className="foot"><Icon name="pin" />{formatRwf(OPEN[0].fee)} / month · {OPEN.length} spaces open</div>
-        </Link>
+        </Link>}
 
         <div className="pv-wrap">
           <div className="pv-hero-bottom">

@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
 import { Button, Chip, Icon, Page, PageHeader, Ring } from "../components/ui.jsx";
-import { formatRwf, sites } from "../data/sites.js";
+import { formatRwf } from "../data/sites.js";
+import { useSites } from "../hooks/useSites.js";
 import { adminFlagsSeed, adminQueue, myFlagsSeed, vendorApplication as application } from "../data/workspace.js";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { useNotifications } from "../hooks/useNotifications.js";
 import { ROLES } from "../lib/access.js";
 
-const OPEN = sites.filter((site) => site.status === "available");
 const TONE = { up: "text-good", down: "text-bad", flat: "text-faint" };
 
 /** Soft tinted card: no border, no shadow. The page is white, so the tint does the separating. */
@@ -70,6 +70,8 @@ function RecentUpdates({ role }) {
 }
 
 function OpenSpaces({ title }) {
+  const { sites } = useSites();
+  const OPEN = sites.filter((site) => site.status === "available");
   return (
     <Panel title={title} description={`${OPEN.length} spaces are accepting applications.`} action={<Button variant="ghost" size="sm" to="/sites">Open map</Button>}>
       {OPEN.map((site) => (
@@ -89,6 +91,8 @@ function QuickActions({ items }) {
 }
 
 function VendorOverview({ name }) {
+  const { sites } = useSites();
+  const OPEN = sites.filter((site) => site.status === "available");
   const progress = (application.total - application.position + 1) / application.total;
   const openFlags = myFlagsSeed.filter((f) => f.status === "Open" || f.status === "Under review").length;
   return (
@@ -136,6 +140,7 @@ function VendorOverview({ name }) {
 }
 
 function AdminOverview({ name }) {
+  const { sites } = useSites();
   const openFlags = adminFlagsSeed.filter((f) => f.status === "Open");
   const counts = { available: 0, allocated: 0, inactive: 0 };
   sites.forEach((s) => { counts[s.status] += 1; });
