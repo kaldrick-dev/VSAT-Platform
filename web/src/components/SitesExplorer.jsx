@@ -3,7 +3,9 @@ import { SitesMap } from "./SitesMap.jsx";
 import { SitePreview } from "./SitePreview.jsx";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { Button, Chip, Dropdown, EmptyState, Eyebrow, Field, Float, Icon, Segmented, StatusChip, fieldClass } from "./ui.jsx";
-import { districts, formatRwf, sites } from "../data/sites.js";
+import { api } from "../lib/api.js";
+import { useSites } from "../hooks/useSites.js";
+import { districts, formatRwf } from "../data/sites.js";
 
 const LEGEND = [
   ["Available", "bg-[#22c55e]"],
@@ -118,6 +120,25 @@ function SiteDetail({ site, onClose, onApply }) {
 
 function ApplicationDialog({ site, onClose }) {
   const { role } = useAuth();
+  const [statement, setStatement] = useState("");
+  const [position, setPosition] = useState(null);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(event) {
+    event.preventDefault();
+    if (role !== "vendor") return;
+    setBusy(true);
+    setError("");
+    try {
+      const { data } = await api.applyToSite(site.id, { statement: statement || undefined });
+      setPosition(data.queuePosition);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
   return (
     <div
       className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-sm"
@@ -130,7 +151,7 @@ function ApplicationDialog({ site, onClose }) {
         aria-labelledby="application-title"
         className="relative grid w-full max-w-md gap-5 rounded-[26px] bg-surface p-6 shadow-float"
         onMouseDown={(event) => event.stopPropagation()}
-        onSubmit={(event) => event.preventDefault()}
+        onSubmit={submit}
       >
         <button type="button" onClick={onClose} aria-label="Close application" className="absolute right-4 top-4 grid size-8 place-items-center rounded-full bg-sunken transition hover:bg-line">
           <Icon name="close" className="size-3.5" />
@@ -148,6 +169,8 @@ function ApplicationDialog({ site, onClose }) {
           <textarea
             autoFocus
             rows="4"
+            value={statement}
+            onChange={(event) => setStatement(event.target.value)}
             placeholder="Briefly describe what you sell and how you will use the space."
             className={`${fieldClass} h-auto resize-y py-2.5`}
           />
@@ -157,11 +180,12 @@ function ApplicationDialog({ site, onClose }) {
           <span className="text-mute">Published fee</span>
           <strong className="font-medium tabular-nums">{formatRwf(site.fee)} / month</strong>
         </div>
+        {error && <p role="alert" className="text-center text-[13px] text-red-600">{error}</p>}
 
         <div className="grid gap-2.5">
           {role === "vendor" ? (
-            <Button size="lg" type="submit">
-              Submit application
+            <Button size="lg" type="submit" disabled={busy || position !== null}>
+              {position !== null ? `Submitted: you are #${position} in the queue` : busy ? "Submitting…" : "Submit application"}
               <Icon name="arrow" className="size-4" />
             </Button>
           ) : role === "admin" ? (
@@ -182,6 +206,7 @@ function ApplicationDialog({ site, onClose }) {
 /** Interactive site registry map with filters, list and detail. Used on the public home page. */
 export default function SitesExplorer({ query = "", fill = false }) {
   const wide = useIsWide();
+  const { sites, loading, error } = useSites();
   const [status, setStatus] = useState("all");
   const [district, setDistrict] = useState("all");
   const [selectedSite, setSelectedSite] = useState(null);
@@ -194,13 +219,13 @@ export default function SitesExplorer({ query = "", fill = false }) {
       const matchesSearch = !term || `${site.name} ${site.district} ${site.sector} ${site.type}`.toLowerCase().includes(term);
       return matchesSearch && (status === "all" || site.status === status) && (district === "all" || site.district === district);
     });
-  }, [district, query, status]);
+  }, [district, query, sites, status]);
 
   const counts = useMemo(() => {
     const result = { all: sites.length, available: 0, allocated: 0, inactive: 0 };
     sites.forEach((site) => { result[site.status] += 1; });
     return result;
-  }, []);
+  }, [sites]);
 
   useEffect(() => {
     if (selectedSite && !filteredSites.some((site) => site.id === selectedSite.id)) setSelectedSite(null);
@@ -268,7 +293,7 @@ export default function SitesExplorer({ query = "", fill = false }) {
             {filteredSites.map((site) => (
               <SiteRow key={site.id} site={site} selected={selectedSite?.id === site.id} onSelect={select} />
             ))}
-            {!filteredSites.length && <EmptyState title="No matching sites">Try a different district or status.</EmptyState>}
+            {!filteredSites.length && <EmptyState title={error ? "Could not load sites" : loading ? "Loading sites…" : "No matching sites"}>{error || (loading ? "One moment." : "Try a different district or status.")}</EmptyState>}
           </div>
         </Float>
       )}

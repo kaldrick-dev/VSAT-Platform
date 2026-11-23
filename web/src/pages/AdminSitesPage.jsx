@@ -1,7 +1,9 @@
 import { Suspense, lazy, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button, Card, Chip, Dropdown, Eyebrow, Field, Icon, Page, PageHeader, StatStrip, StatusChip, fieldClass } from "../components/ui.jsx";
-import { districts, formatRwf, sites as seed } from "../data/sites.js";
+import { api } from "../lib/api.js";
+import { useSites } from "../hooks/useSites.js";
+import { districts, formatRwf } from "../data/sites.js";
 import { TRADES } from "../data/workspace.js";
 
 const LocationPicker = lazy(() => import("../components/LocationPicker.jsx"));
@@ -47,23 +49,42 @@ function AddSiteForm({ onAdd, onCancel }) {
 
 export function AdminSitesPage() {
   const [params] = useSearchParams();
-  const [list, setList] = useState(seed);
+  const { sites: list, loading, error: loadError, reload } = useSites();
+  const [error, setError] = useState("");
   const [adding, setAdding] = useState(params.get("new") === "1");
 
   const counts = { available: 0, allocated: 0, inactive: 0 };
   list.forEach((s) => { counts[s.status] += 1; });
 
-  function add(form) {
-    const id = Math.max(...list.map((s) => s.id)) + 1;
-    setList([{ id, name: form.name.trim(), district: form.district, sector: form.sector.trim(), status: "available", latitude: form.location.latitude, longitude: form.location.longitude, size: `${form.size} m²`, fee: Number(form.fee), type: form.type, terms: form.terms.trim(), queue: 0, reference: `VSAT-${250 + id}` }, ...list]);
-    setAdding(false);
+  async function add(form) {
+    try {
+      await api.createSite({
+        name: form.name.trim(), district: form.district, sector: form.sector.trim(), type: form.type,
+        size: `${form.size} m²`, fee: Number(form.fee), terms: form.terms.trim(),
+        latitude: form.location.latitude, longitude: form.location.longitude
+      });
+      setAdding(false);
+      setError("");
+      reload();
+    } catch (err) {
+      setError(err.message);
+    }
   }
-  const toggle = (id) => setList(list.map((s) => (s.id === id ? { ...s, status: s.status === "inactive" ? "available" : "inactive" } : s)));
+
+  async function toggle(site) {
+    try {
+      await api.updateSite(site.id, { status: site.status === "inactive" ? "available" : "inactive" });
+      reload();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
 
   return (
     <Page>
       <PageHeader title="Manage sites" description="Publish new spaces and pause or reopen existing ones. Every change is recorded on the public activity log." actions={!adding && <Button onClick={() => setAdding(true)}><Icon name="plus" className="size-4" />Add vending site</Button>} />
       <StatStrip items={[{ label: "Listed", value: list.length }, { label: "Available", value: counts.available, tone: "up" }, { label: "Allocated", value: counts.allocated }, { label: "Paused", value: counts.inactive }]} />
+      {(error || loadError) && <p role="alert" className="text-[13px] text-red-600">{error || loadError}</p>}
       {adding && <AddSiteForm onAdd={add} onCancel={() => setAdding(false)} />}
 
       <Card className="overflow-x-auto">
@@ -78,10 +99,11 @@ export function AdminSitesPage() {
                 <td className="px-5 py-3.5 text-[13px] tabular-nums">{formatRwf(s.fee)}</td>
                 <td className="px-5 py-3.5"><StatusChip status={s.status} /></td>
                 <td className="px-5 py-3.5 text-right">
-                  {s.status !== "allocated" && <Button variant="secondary" size="sm" onClick={() => toggle(s.id)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
+                  {s.status !== "allocated" && <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
                 </td>
               </tr>
             ))}
+            {!list.length && <tr><td colSpan="5" className="px-5 py-6 text-center text-[13px] text-mute">{loading ? "Loading sites…" : "No sites yet."}</td></tr>}
           </tbody>
         </table>
       </Card>

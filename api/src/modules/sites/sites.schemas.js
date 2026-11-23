@@ -11,7 +11,7 @@ export const listSitesSchema = z.object({
 export const idSchema = z.object({ id: z.string().min(1) });
 
 export const createSiteSchema = z.object({
-  reference: z.string().min(1),
+  reference: z.string().min(1).optional(),
   name: z.string().min(2),
   district: z.string().min(1),
   sector: z.string().min(1),

@@ -59,6 +59,11 @@ test("anyone reads one site", async () => {
   assert.equal(res.body.data.reference, "TEST-1");
 });
 
+test("a site shows its pending queue count", async () => {
+  const res = await request(app).get(`/api/v1/sites/${siteId}`);
+  assert.equal(res.body.data.queue, 0);
+});
+
 test("admin updates a site", async () => {
   const res = await request(app).patch(`/api/v1/sites/${siteId}`).set("Authorization", `Bearer ${adminToken}`).send({ status: "inactive" });
   assert.equal(res.status, 200);
