@@ -5,7 +5,7 @@ An initial monorepo scaffold for the SRS-defined platform: a public, auditable r
 ## Technology
 
 - `web`: React + Vite, React Router, Tailwind CSS v4, MapLibre GL JS
-- `api`: Node.js + Express REST API, JWT-ready authentication middleware
+- `api`: Node.js + Express REST API, Prisma, JWT authentication
 - `database`: PostgreSQL, including an insert-only allocation decision log
 
 ## Get started
@@ -17,6 +17,8 @@ npm install
 cp api/.env.example api/.env
 cp web/.env.example web/.env
 docker compose up -d postgres
+npm run db:migrate -w @vsat/api
+npm run db:seed -w @vsat/api
 npm run dev
 ```
 
@@ -32,6 +34,7 @@ npm run dev:api   # API only
 npm run dev:web   # frontend only
 npm run build     # production frontend build
 npm test          # workspace tests
+npm run test:setup -w @vsat/api   # once: migrate the vsat_test database
 ```
 
 ## Project layout
@@ -39,13 +42,13 @@ npm test          # workspace tests
 ```text
 api/
   src/
-    db/migrations/       PostgreSQL schema and audit constraints
-    middleware/          API errors and authentication
-    routes/              REST resources from the SRS
+    modules/             one folder per feature (routes, controller, service, schemas)
+    middleware/          errors, validation, authentication
+  prisma/                schema, migrations and seed
 web/
   src/
     components/          shared UI and map
     pages/               public, vendor, and admin entry points
 ```
 
-This scaffold establishes the architecture and domain boundaries. Feature handlers intentionally return empty collections until their application services and persistence queries are implemented in the next increments.
+Postgres runs on port 5433 (see `docker-compose.yml`). Seed logins: `admin@example.com` and `vendor@example.com`, password `password123`. API endpoints and who can call them are listed in `docs/ACCESS.md`.
