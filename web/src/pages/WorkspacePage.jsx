@@ -1,8 +1,12 @@
+import { useCallback } from "react";
 import { Link } from "react-router-dom";
 import { Button, Chip, Icon, Page, PageHeader, Ring } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { useSites } from "../hooks/useSites.js";
-import { adminFlagsSeed, adminQueue, myFlagsSeed, vendorApplication as application } from "../data/workspace.js";
+import { adminFlagsSeed, adminQueue } from "../data/workspace.js";
+import { useApi } from "../hooks/useApi.js";
+import { api } from "../lib/api.js";
+import { formatDateTime } from "../lib/format.js";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { useNotifications } from "../hooks/useNotifications.js";
 import { ROLES } from "../lib/access.js";
@@ -56,7 +60,7 @@ function Row({ to, primary, secondary, end }) {
 const Go = () => <Icon name="arrow" className="size-4 text-faint" />;
 
 function RecentUpdates({ role }) {
-  const { items } = useNotifications(role);
+  const { items } = useNotifications();
   return (
     <Panel title="Recent updates" action={<Button variant="ghost" size="sm" to="/notifications">View all</Button>}>
       {items.slice(0, 3).map((n) => (
@@ -93,15 +97,18 @@ function QuickActions({ items }) {
 function VendorOverview({ name }) {
   const { sites } = useSites();
   const OPEN = sites.filter((site) => site.status === "available");
-  const progress = (application.total - application.position + 1) / application.total;
-  const openFlags = myFlagsSeed.filter((f) => f.status === "Open" || f.status === "Under review").length;
+  const { data: applications } = useApi(useCallback(() => api.myApplications().then((res) => res.data), []), []);
+  const { data: flags } = useApi(useCallback(() => api.myFlags().then((res) => res.data), []), []);
+  const pending = applications.filter((a) => a.status === "pending");
+  const application = pending[0];
+  const openFlags = flags.filter((f) => f.status === "open").length;
   return (
     <Page>
       <PageHeader title={`Welcome, ${name}`} description="Your applications, your place in each queue and the spaces open right now." actions={<Button to="/sites">Browse sites<Icon name="arrow" className="size-4" /></Button>} />
 
       <Tiles>
-        <Tile label="Active applications" value={1} />
-        <Tile label="Queue position" value={`#${application.position}`} delta={`of ${application.total}`} highlight />
+        <Tile label="Active applications" value={pending.length} />
+        <Tile label="Queue position" value={application ? `#${application.queuePosition}` : "None"} delta={application ? application.site.name : "no pending application"} highlight />
         <Tile label="Open spaces" value={OPEN.length} delta="to apply for" tone="up" />
         <Tile label="My flags open" value={openFlags} delta={openFlags ? "awaiting review" : "none"} />
       </Tiles>
@@ -109,19 +116,23 @@ function VendorOverview({ name }) {
       <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
         <div className="grid gap-4">
           <Panel title="Your application" action={<Button variant="ghost" size="sm" to="/vendor">Details</Button>}>
-            <div className="flex flex-wrap items-center gap-5 rounded-xl bg-surface p-4">
-              <Ring value={progress} size={84} stroke={7} label={`Position ${application.position} of ${application.total}`}>
-                <span>
-                  <span className="block text-[24px] font-semibold tabular-nums tracking-[-0.03em]">{application.position}</span>
-                  <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.08em] text-faint">of {application.total}</span>
-                </span>
-              </Ring>
-              <div className="min-w-0 flex-1">
-                <Chip tone="warn">{application.status}</Chip>
-                <p className="mt-2 text-[15px] font-semibold">{application.site}</p>
-                <p className="text-[13px] text-mute">{application.sector} · applied {application.applied}</p>
+            {application ? (
+              <div className="flex flex-wrap items-center gap-5 rounded-xl bg-surface p-4">
+                <Ring value={1 / application.queuePosition} size={84} stroke={7} label={`Position ${application.queuePosition}`}>
+                  <span>
+                    <span className="block text-[24px] font-semibold tabular-nums tracking-[-0.03em]">{application.queuePosition}</span>
+                    <span className="mt-1 block font-mono text-[9px] uppercase tracking-[0.08em] text-faint">in queue</span>
+                  </span>
+                </Ring>
+                <div className="min-w-0 flex-1">
+                  <Chip tone="warn">Pending review</Chip>
+                  <p className="mt-2 text-[15px] font-semibold">{application.site.name}</p>
+                  <p className="text-[13px] text-mute">{application.site.district} · applied {formatDateTime(application.appliedAt)}</p>
+                </div>
               </div>
-            </div>
+            ) : (
+              <p className="rounded-xl bg-surface p-4 text-[13px] text-mute">You have no pending application. Open the map to apply for a space.</p>
+            )}
           </Panel>
           <OpenSpaces title="Open spaces you can apply for" />
         </div>
