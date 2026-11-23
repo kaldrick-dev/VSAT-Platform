@@ -13,7 +13,10 @@ export const listMine = (vendorId) =>
 export const listAll = (filters) =>
   prisma.flag.findMany({
     where: filters,
-    include: { vendor: { select: { fullName: true, email: true } } },
+    include: {
+      vendor: { select: { fullName: true, email: true } },
+      allocation: { select: { site: { select: { name: true } } } }
+    },
     orderBy: { createdAt: "desc" }
   });
 
