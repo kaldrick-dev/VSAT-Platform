@@ -10,7 +10,9 @@
     "db:migrate": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "node prisma/seed.js",
-    "test:setup": "DATABASE_URL=postgresql://vsat:vsat@localhost:5433/vsat_test prisma migrate deploy"
+    "test:setup": "DATABASE_URL=postgresql://vsat:vsat@localhost:5433/vsat_test prisma migrate deploy",
+    "postinstall": "prisma generate",
+    "db:migrate:deploy": "prisma migrate deploy"
   },
   "dependencies": {
     "@prisma/client": "^6.19.3",

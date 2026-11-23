@@ -12,3 +12,7 @@ const schema = z.object({
 
 export const env = schema.parse(process.env);
 
+if (env.NODE_ENV === "production" && !process.env.JWT_SECRET) {
+  throw new Error("JWT_SECRET must be set in production");
+}
+
