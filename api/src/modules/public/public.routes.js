@@ -11,6 +11,7 @@ const send = (res, format, name, rows) => {
     res.type("text/csv").attachment(`${name}.csv`).send(toCsv(rows, Object.keys(rows[0] ?? {})));
     return;
   }
+  if (format === "json") res.attachment(`${name}.json`);
   res.json({ data: rows });
 };
 

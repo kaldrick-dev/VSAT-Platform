@@ -4,6 +4,8 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 const TOKEN_KEY = "vsat.token";
 
+export const publicUrl = (name, format) => `${BASE_URL}/public/${name}?format=${format}`;
+
 export const auth = {
   get() {
     try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
