@@ -1,20 +1,12 @@
 import { Router } from "express";
 import { requireAuth, requireRole } from "../middleware/auth.js";
-import { authLimiter } from "../middleware/rate-limit.js";
+import { authRoutes } from "../modules/auth/auth.routes.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
 
 export const apiRouter = Router();
 
 apiRouter.use("/health", healthRoutes);
-apiRouter.use("/auth", authLimiter);
-
-apiRouter.post("/auth/register", (_req, res) => {
-  res.status(501).json({ message: "Vendor registration endpoint scaffolded" });
-});
-
-apiRouter.post("/auth/login", (_req, res) => {
-  res.status(501).json({ message: "Login endpoint scaffolded" });
-});
+apiRouter.use("/auth", authRoutes);
 
 apiRouter.get("/sites", (_req, res) => {
   res.json({ data: [], meta: { total: 0 } });
@@ -26,10 +18,6 @@ apiRouter.post("/sites", requireAuth, requireRole("admin"), (_req, res) => {
 
 apiRouter.post("/sites/:siteId/applications", requireAuth, requireRole("vendor"), (_req, res) => {
   res.status(501).json({ message: "Application submission endpoint scaffolded" });
-});
-
-apiRouter.get("/auth/me", requireAuth, (req, res) => {
-  res.json({ data: { id: req.user.sub, role: req.user.role } });
 });
 
 // Admin queue view: pending applications per site, oldest first, with vendor identity.
