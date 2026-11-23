@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { auth } from "../lib/api.js";
+import { api, auth } from "../lib/api.js";
 import { ROLES } from "../lib/access.js";
 
 const USER_KEY = "vsat.user";
@@ -35,6 +35,16 @@ export function AuthProvider({ children }) {
     auth.set(null);
     writeUser(null);
     setUser(null);
+  }, []);
+
+  // Refresh the stored user from the API so a role change or deleted account shows up on reload.
+  useEffect(() => {
+    if (!auth.get()) return;
+    api.me().then(({ user: fresh }) => {
+      const next = { ...fresh, name: fresh.fullName };
+      writeUser(next);
+      setUser(next);
+    }).catch(() => {});
   }, []);
 
   // The API rejected our token (expired/invalid): drop the session.

@@ -13,11 +13,10 @@ const POINTS = [
   "Your account never appears on the public record"
 ];
 
-// Dev-only shortcuts so the role-based UI can be exercised before the auth API exists.
-// import.meta.env.DEV is false in production builds, so this is stripped. The API still verifies every token.
+// Dev only: fills the form with the seeded accounts (npm run db:seed).
 const DEMO = {
-  vendor: { token: "dev-vendor", user: { name: "Demo Vendor", email: "vendor@example.com", role: "vendor" } },
-  admin: { token: "dev-admin", user: { name: "Demo Admin", email: "admin@example.com", role: "admin" } }
+  vendor: { email: "vendor@example.com", password: "password123" },
+  admin: { email: "admin@example.com", password: "password123" }
 };
 
 export function LoginPage() {
@@ -45,16 +44,13 @@ export function LoginPage() {
       signIn({ token, user });
       navigate(landing(user.role), { replace: true });
     } catch (err) {
-      setError(err.status === 501 ? "This isn't available yet: the account service is still being built." : err.message);
+      setError(err.message);
     } finally {
       setBusy(false);
     }
   }
 
-  function demo(kind) {
-    signIn(DEMO[kind]);
-    navigate(landing(kind), { replace: true });
-  }
+  const fillDemo = (kind) => setForm({ ...form, ...DEMO[kind] });
 
   return (
     <div className="pv pv-login">
@@ -104,10 +100,10 @@ export function LoginPage() {
 
           {import.meta.env.DEV && (
             <div className="pv-dev">
-              <span>Dev only: skip the API</span>
+              <span>Dev only: fill a seeded account</span>
               <div className="pv-row">
-                <button type="button" className="pv-btn pv-btn-glass pv-btn-sm" onClick={() => demo("vendor")}>Demo vendor</button>
-                <button type="button" className="pv-btn pv-btn-glass pv-btn-sm" onClick={() => demo("admin")}>Demo admin</button>
+                <button type="button" className="pv-btn pv-btn-glass pv-btn-sm" onClick={() => fillDemo("vendor")}>Demo vendor</button>
+                <button type="button" className="pv-btn pv-btn-glass pv-btn-sm" onClick={() => fillDemo("admin")}>Demo admin</button>
               </div>
             </div>
           )}
