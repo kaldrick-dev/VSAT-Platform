@@ -7,6 +7,7 @@ import { documentsRoutes } from "../modules/documents/documents.routes.js";
 import { flagsRoutes } from "../modules/flags/flags.routes.js";
 import { notificationsRoutes } from "../modules/notifications/notifications.routes.js";
 import { profileRoutes } from "../modules/profile/profile.routes.js";
+import { publicRoutes } from "../modules/public/public.routes.js";
 import { sitesRoutes } from "../modules/sites/sites.routes.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
 
@@ -15,6 +16,7 @@ export const apiRouter = Router();
 apiRouter.use("/health", healthRoutes);
 apiRouter.use("/auth", authRoutes);
 apiRouter.use("/sites", sitesRoutes);
+apiRouter.use("/public", publicRoutes);
 apiRouter.use(applicationsRoutes);
 apiRouter.use("/profile", profileRoutes);
 apiRouter.use(documentsRoutes);
