@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from "../middleware/auth.js";
 import { authRoutes } from "../modules/auth/auth.routes.js";
 import { applicationsRoutes } from "../modules/applications/applications.routes.js";
 import { documentsRoutes } from "../modules/documents/documents.routes.js";
+import { notificationsRoutes } from "../modules/notifications/notifications.routes.js";
 import { profileRoutes } from "../modules/profile/profile.routes.js";
 import { sitesRoutes } from "../modules/sites/sites.routes.js";
 import { healthRoutes } from "../modules/health/health.routes.js";
@@ -15,6 +16,7 @@ apiRouter.use("/sites", sitesRoutes);
 apiRouter.use(applicationsRoutes);
 apiRouter.use("/profile", profileRoutes);
 apiRouter.use(documentsRoutes);
+apiRouter.use("/notifications", notificationsRoutes);
 
 apiRouter.get("/allocations", (_req, res) => {
   res.json({ data: [], meta: { total: 0 } });
