@@ -33,7 +33,9 @@ function NavItem({ path: to, label, icon, end }) {
 
 export function Layout() {
   const [query, setQuery] = useState("");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const searchRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   const navigate = useNavigate();
   const { user, role, isSignedIn, signOut } = useAuth();
   const navGroups = navGroupsFor(role);
@@ -43,17 +45,23 @@ export function Layout() {
     function onKeyDown(event) {
       if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
         event.preventDefault();
-        searchRef.current?.focus();
+        if (window.matchMedia("(max-width: 639px)").matches) setMobileSearchOpen(true);
+        else searchRef.current?.focus();
       }
     }
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
+  useEffect(() => {
+    if (mobileSearchOpen) mobileSearchRef.current?.focus();
+  }, [mobileSearchOpen]);
+
   // Search acts on the workspace site map.
   function onSearch(event) {
     event.preventDefault();
     navigate(query.trim() ? `/sites?site=${encodeURIComponent(query.trim())}` : "/sites");
+    setMobileSearchOpen(false);
   }
 
   return (
@@ -88,9 +96,26 @@ export function Layout() {
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="shrink-0 border-b border-line bg-surface">
           <header className="flex items-center gap-2.5 px-3 py-3 sm:px-6">
-            <NavLink to="/workspace" aria-label="Workspace overview" className="mr-1 lg:hidden"><Logo /></NavLink>
+            <NavLink to="/workspace" aria-label="Workspace overview" className={`mr-1 lg:hidden ${mobileSearchOpen ? "max-sm:hidden" : ""}`}><Logo /></NavLink>
 
-            <form role="search" onSubmit={onSearch} className="relative max-w-[460px] flex-1">
+            {mobileSearchOpen && (
+              <form role="search" onSubmit={onSearch} className="relative min-w-0 flex-1 sm:hidden">
+                <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-faint" />
+                <input
+                  ref={mobileSearchRef}
+                  type="search"
+                  aria-label="Search sites"
+                  value={query}
+                  onChange={(event) => setQuery(event.target.value)}
+                  onKeyDown={(event) => { if (event.key === "Escape") setMobileSearchOpen(false); }}
+                  placeholder="Search sites…"
+                  className="h-10 w-full rounded-lg bg-frame pl-11 pr-3 text-base ring-[0.5px] ring-ink/25 placeholder:text-faint focus:outline-none focus:ring-2 focus:ring-accent"
+                />
+              </form>
+            )}
+            {mobileSearchOpen && <IconButton icon="close" label="Close search" className="sm:hidden" onClick={() => setMobileSearchOpen(false)} />}
+
+            <form role="search" onSubmit={onSearch} className="relative hidden max-w-[460px] flex-1 sm:block">
               <span className="sr-only">Search sites</span>
               <Icon name="search" className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-faint" />
               <input
@@ -107,7 +132,8 @@ export function Layout() {
               </kbd>
             </form>
 
-            <div className="ml-auto flex items-center gap-2">
+            <div className={`ml-auto items-center gap-2 ${mobileSearchOpen ? "hidden sm:flex" : "flex"}`}>
+              <IconButton icon="search" label="Open search" className="sm:hidden" onClick={() => setMobileSearchOpen(true)} />
               <IconButton icon="bell" label={unread ? `${unread} unread notifications` : "Notifications"} badge={unread > 0} onClick={() => navigate("/notifications")} />
               {isSignedIn ? (
                 <>
