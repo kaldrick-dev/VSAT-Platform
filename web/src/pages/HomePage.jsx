@@ -30,13 +30,6 @@ export function HomePage() {
   return (
     <>
       <section className="pv-hero" aria-labelledby="hero-h">
-        {OPEN[0] && <Link to="/#map" className="pv-float" aria-label={`Open now: ${OPEN[0].name}`}>
-          <div className="row"><span>Open now</span><span className="pv-pill good">Available</span></div>
-          <h3>{OPEN[0].name}</h3>
-          <p>{OPEN[0].sector}, {OPEN[0].district} · {OPEN[0].size.replace(" ", "\u00A0")} · {OPEN[0].type}</p>
-          <div className="foot"><Icon name="pin" />{formatRwf(OPEN[0].fee)} / month · {OPEN.length} spaces open</div>
-        </Link>}
-
         <div className="pv-wrap">
           <div className="pv-hero-bottom">
             <div>

@@ -1,14 +1,8 @@
-import { useEffect, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
 import { HOME_BY_ROLE, ROLES } from "../lib/access.js";
-import { Icon } from "./ui.jsx";
 import "../public.css";
-
-const LINKS = [
-  { to: "/", label: "Home", end: true },
-  { to: "/#map", label: "Site map", plain: true }
-];
 
 export function Logo() {
   return <span className="pv-logo">VSAT</span>;
@@ -16,36 +10,17 @@ export function Logo() {
 
 function Nav() {
   const { isSignedIn, role } = useAuth();
-  const [open, setOpen] = useState(false);
-  const { pathname } = useLocation();
-  useEffect(() => setOpen(false), [pathname]);
-
   const cta = isSignedIn && role !== ROLES.PUBLIC
     ? { to: HOME_BY_ROLE[role], label: "My workspace" }
     : { to: "/login", label: "Sign in" };
 
   return (
-    <>
-      <header className="pv-nav">
+    <header className="pv-nav">
+      <div className="pv-wrap pv-nav-in">
         <Link to="/" aria-label="VSAT home"><Logo /></Link>
-        <nav className="pv-links" aria-label="Primary">
-          {LINKS.map((l) => l.plain
-            ? <Link key={l.to} to={l.to}>{l.label}</Link>
-            : <NavLink key={l.to} to={l.to} end={l.end}>{l.label}</NavLink>)}
-        </nav>
-        <div className="pv-actions">
-          <Link to={cta.to} className="pv-btn">{cta.label}</Link>
-          <button type="button" className="pv-burger" aria-label="Menu" aria-expanded={open} onClick={() => setOpen(!open)}>
-            <Icon name={open ? "close" : "menu"} className="size-5" />
-          </button>
-        </div>
-      </header>
-      {open && (
-        <nav className="pv-sheet" aria-label="Mobile">
-          {[...LINKS, { to: cta.to, label: cta.label }].map((l) => <Link key={l.to + l.label} to={l.to}>{l.label}</Link>)}
-        </nav>
-      )}
-    </>
+        <Link to={cta.to} className="pv-btn">{cta.label}</Link>
+      </div>
+    </header>
   );
 }
 
