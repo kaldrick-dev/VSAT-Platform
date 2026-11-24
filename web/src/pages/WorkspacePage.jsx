@@ -200,13 +200,35 @@ function AdminOverview({ name }) {
       <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
         <div className="grid gap-4">
           <Panel title="Oldest pending applications" description="Positions are fixed by submission time." action={<Button variant="ghost" size="sm" to="/admin">Open queue</Button>}>
-            {queue.slice(0, 4).map((a, i) => (
-              <Row key={a.id} to="/admin"
-                primary={<><span className="mr-2 font-mono text-[11px] text-faint">{i + 1}</span>{a.site.name}</>}
-                secondary={`${a.vendor.trade ?? "Trade not given"} · ${formatDateTime(a.appliedAt)}`}
-                end={<Chip tone={a.vendor._count.documents ? "good" : "bad"}>{a.vendor._count.documents ? "Documents" : "No documents"}</Chip>} />
-            ))}
-            {!queue.length && (loading ? <SkeletonRows rows={2} /> : <p className="px-3.5 py-3 text-[13px] text-mute">No applications are waiting.</p>)}
+            <div className="overflow-x-auto rounded-xl bg-surface">
+              <table className="w-full min-w-[420px] border-collapse text-left">
+                <caption className="sr-only">Oldest pending applications</caption>
+                <thead>
+                  <tr className="border-b border-line">
+                    <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">#</Eyebrow></th>
+                    <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">Space</Eyebrow></th>
+                    <th scope="col" className="hidden whitespace-nowrap px-4 py-2.5 2xl:table-cell"><Eyebrow className="text-mute">Applied</Eyebrow></th>
+                    <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">Documents</Eyebrow></th>
+                    <th scope="col" className="px-4 py-2.5"><span className="sr-only">Action</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {queue.slice(0, 4).map((a) => (
+                    <tr key={a.id} className="border-b border-line transition last:border-b-0 hover:bg-sunken/60">
+                      <td className="px-4 py-3"><span className="grid size-7 place-items-center rounded-lg bg-sunken font-mono text-[12px] font-medium" title="Position in this site's queue">{a.queuePosition}</span></td>
+                      <th scope="row" className="px-4 py-3 text-left font-normal">
+                        <span className="block text-[13.5px] font-medium">{a.site.name}</span>
+                        <span className="mt-0.5 block text-xs text-mute">{a.vendor.fullName}<span className="2xl:hidden"> · {formatDateTime(a.appliedAt)}</span></span>
+                      </th>
+                      <td className="hidden whitespace-nowrap px-4 py-3 text-[13px] text-mute 2xl:table-cell">{formatDateTime(a.appliedAt)}</td>
+                      <td className="whitespace-nowrap px-4 py-3"><Chip tone={a.vendor._count.documents ? "good" : "bad"}>{a.vendor._count.documents ? "Attached" : "None"}</Chip></td>
+                      <td className="px-4 py-3 text-right"><Button variant="secondary" size="sm" to="/admin">Review</Button></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {!queue.length && (loading ? <SkeletonRows rows={2} /> : <p className="px-4 py-3 text-[13px] text-mute">No applications are waiting.</p>)}
+            </div>
           </Panel>
           <RecentUpdates role="admin" />
         </div>
@@ -215,16 +237,6 @@ function AdminOverview({ name }) {
             {openFlags.length ? openFlags.map((f) => (
               <Row key={f.id} to="/admin/flags" primary={f.category} secondary={`${f.allocation.site.name} · raised ${formatDateTime(f.createdAt)}`} end={<Chip tone="warn">Open</Chip>} />
             )) : <p className="px-3.5 py-3 text-[13px] text-mute">No flags are waiting.</p>}
-          </Panel>
-          <Panel title="Spaces by status">
-            <div className="grid grid-cols-3 gap-2 p-1">
-              {[["Available", counts.available, "good"], ["Allocated", counts.allocated, "info"], ["Paused", counts.inactive, "idle"]].map(([label, n, tone]) => (
-                <div key={label} className="rounded-xl bg-surface p-3.5">
-                  <Chip tone={tone}>{label}</Chip>
-                  <p className="mt-3 text-[26px] font-semibold leading-none tabular-nums">{n}</p>
-                </div>
-              ))}
-            </div>
           </Panel>
           <QuickActions items={[
             ["/admin/sites?new=1", "Add a vending site", "Publish a new space"],
