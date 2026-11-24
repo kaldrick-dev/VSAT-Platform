@@ -50,6 +50,7 @@ export function VendorPage() {
       />
 
       <StatStrip
+        loading={loading}
         items={[
           { label: "Pending", value: count("pending") },
           { label: "Approved", value: count("approved"), tone: "up" },
@@ -61,8 +62,8 @@ export function VendorPage() {
       {error && <p role="alert" className="text-[13px] text-red-600">{error}</p>}
       <div className="grid gap-4">
         {applications.map((a) => <ApplicationCard key={a.id} application={a} />)}
-        {!applications.length && !loading && (
-          <Card><EmptyState title="No applications yet">Open the site map and apply for a space.</EmptyState></Card>
+        {!applications.length && (
+          <Card><EmptyState loading={loading} title="No applications yet">Open the site map and apply for a space.</EmptyState></Card>
         )}
       </div>
     </Page>

@@ -1,5 +1,6 @@
 import { Suspense, lazy } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
+import { MapSkeleton } from "./components/ui.jsx";
 import { Layout } from "./components/Layout.jsx";
 import { PublicLayout } from "./components/PublicLayout.jsx";
 import { RequireRole } from "./components/RequireRole.jsx";
@@ -43,7 +44,7 @@ export function App() {
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="sites/:id/record" element={<SiteRecordPage />} />
             <Route path="help" element={<HelpPage />} />
-            <Route path="sites" element={<Suspense fallback={<p className="p-8 text-sm text-mute">Loading map…</p>}><SitesPage /></Suspense>} />
+            <Route path="sites" element={<Suspense fallback={<MapSkeleton className="h-full min-h-[520px]" />}><SitesPage /></Suspense>} />
           </Route>
           <Route element={<RequireRole roles={[ROLES.VENDOR]} />}>
             <Route path="sites/:id/apply" element={<ApplyPage />} />

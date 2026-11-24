@@ -2,7 +2,7 @@ import { Button, Card, Chip, EmptyState, Page, PageHeader } from "../components/
 import { useNotifications } from "../hooks/useNotifications.js";
 
 export function NotificationsPage() {
-  const { items, unread, markRead, markAllRead } = useNotifications();
+  const { items, unread, loading, markRead, markAllRead } = useNotifications();
   return (
     <Page>
       <PageHeader
@@ -24,7 +24,7 @@ export function NotificationsPage() {
             {!n.read && <Button variant="ghost" size="sm" onClick={() => markRead(n.id)}>Mark read</Button>}
           </article>
         ))}
-        {!items.length && <EmptyState title="No notifications">Updates about your work will appear here.</EmptyState>}
+        {!items.length && <EmptyState loading={loading} title="No notifications">Updates about your work will appear here.</EmptyState>}
       </Card>
     </Page>
   );

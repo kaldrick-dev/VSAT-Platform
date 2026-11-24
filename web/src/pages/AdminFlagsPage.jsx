@@ -53,7 +53,7 @@ function FlagCard({ flag, onReviewed }) {
 
 export function AdminFlagsPage() {
   const call = useCallback(() => api.listFlags().then((res) => res.data), []);
-  const { data: flags, error, reload } = useApi(call, []);
+  const { data: flags, loading, error, reload } = useApi(call, []);
   const [view, setView] = useState("open");
   const open = flags.filter((f) => f.status === "open");
   const shown = view === "open" ? open : flags;
@@ -64,7 +64,7 @@ export function AdminFlagsPage() {
       {error && <p role="alert" className="text-[13px] text-red-600">{error}</p>}
       <Card className="overflow-hidden">
         {shown.map((f) => <FlagCard key={f.id + f.status} flag={f} onReviewed={reload} />)}
-        {!shown.length && <EmptyState title="Nothing to review">No flags are waiting.</EmptyState>}
+        {!shown.length && <EmptyState loading={loading} title="Nothing to review">No flags are waiting.</EmptyState>}
       </Card>
       <Eyebrow>Closed flags stay in the log. They are never deleted.</Eyebrow>
     </Page>

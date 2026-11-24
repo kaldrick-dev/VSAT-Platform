@@ -11,7 +11,7 @@ const LABEL = { open: "Open", upheld: "Upheld", dismissed: "Dismissed" };
 
 export function MyFlagsPage() {
   const call = useCallback(() => api.myFlags().then((res) => res.data), []);
-  const { data: flags, reload } = useApi(call, []);
+  const { data: flags, loading, reload } = useApi(call, []);
   const { activity } = usePublicData();
   const allocated = activity.filter((e) => e.event === "Allocated");
 
@@ -75,7 +75,7 @@ export function MyFlagsPage() {
               {f.reviewNote && <p className="mt-2 rounded-xl bg-sunken px-3 py-2 text-[13px] text-mute">Administrator: {f.reviewNote}</p>}
             </article>
           ))}
-          {!flags.length && <EmptyState title="No flags yet">Flags you raise will be listed here with their status.</EmptyState>}
+          {!flags.length && <EmptyState loading={loading} title="No flags yet">Flags you raise will be listed here with their status.</EmptyState>}
         </Card>
       </div>
     </Page>

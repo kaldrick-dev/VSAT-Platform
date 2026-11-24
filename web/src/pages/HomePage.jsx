@@ -1,6 +1,6 @@
 import { Suspense, lazy } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Icon } from "../components/ui.jsx";
+import { Icon, MapSkeleton } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { useSites } from "../hooks/useSites.js";
 import { useAuth } from "../hooks/useAuth.jsx";
@@ -62,7 +62,7 @@ export function HomePage() {
             </div>
             <p className="pv-muted">Every listed vending site with its location, fee and terms. Anyone can browse; sign in as a vendor to apply.</p>
           </div>
-          <Suspense fallback={<div className="grid h-[560px] place-items-center rounded-[24px] bg-[var(--mist)] text-[var(--text-2)]">Loading map…</div>}>
+          <Suspense fallback={<MapSkeleton className="h-[560px] rounded-[24px]" />}>
             <SitesExplorer query={params.get("site") ?? ""} />
           </Suspense>
         </div>

@@ -148,9 +148,8 @@ export function SitesMap({ sites, selectedSite, onSelectSite, padding, shiftCont
       <div ref={containerRef} className="size-full" role="region" aria-label="Map of vending sites in Kigali" />
 
       {status === "loading" && (
-        <div role="status" className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 rounded-full bg-surface px-4 py-2.5 text-[13px] text-mute shadow-float">
-          <span className="size-3.5 animate-spin rounded-full border-2 border-line border-t-accent" />
-          Loading map…
+        <div role="status" aria-label="Loading map" className="absolute inset-0 bg-sunken motion-safe:animate-pulse">
+          <span className="sr-only">Loading map</span>
         </div>
       )}
       {status === "error" && (

@@ -4,14 +4,15 @@ import { formatDateTime } from "../lib/format.js";
 
 // Tiny shared store so the header bell and the Notifications page stay in sync.
 let items = [];
+let loaded = false;
 const listeners = new Set();
 const emit = () => listeners.forEach((fn) => fn());
 const subscribe = (fn) => { listeners.add(fn); return () => listeners.delete(fn); };
 
 const load = () =>
   api.notifications()
-    .then(({ data }) => { items = data.map((n) => ({ ...n, time: formatDateTime(n.createdAt), tone: "info" })); emit(); })
-    .catch(() => { items = []; emit(); });
+    .then(({ data }) => { items = data.map((n) => ({ ...n, time: formatDateTime(n.createdAt), tone: "info" })); loaded = true; emit(); })
+    .catch(() => { items = []; loaded = true; emit(); });
 
 export function useNotifications() {
   const list = useSyncExternalStore(subscribe, () => items);
@@ -20,6 +21,7 @@ export function useNotifications() {
 
   return {
     items: list,
+    loading: !loaded && !!auth.get(),
     unread: list.filter((n) => !n.read).length,
     markRead(id) {
       items = list.map((n) => (n.id === id ? { ...n, read: true } : n));

@@ -1,6 +1,6 @@
 import { Suspense, lazy, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Button, Card, Chip, Dropdown, Eyebrow, Field, Icon, Page, PageHeader, StatStrip, StatusChip, fieldClass } from "../components/ui.jsx";
+import { Button, Card, Chip, Dropdown, Eyebrow, Field, Icon, MapSkeleton, Page, PageHeader, SkeletonRows, StatStrip, StatusChip, fieldClass } from "../components/ui.jsx";
 import { api } from "../lib/api.js";
 import { useSites } from "../hooks/useSites.js";
 import { districts, formatRwf } from "../data/sites.js";
@@ -36,7 +36,7 @@ function AddSiteForm({ onAdd, onCancel }) {
         </div>
         <div className="grid content-start gap-3">
           <Eyebrow>Location: click the map</Eyebrow>
-          <Suspense fallback={<div className="grid h-[260px] place-items-center rounded-2xl bg-sunken text-[13px] text-mute">Loading map…</div>}>
+          <Suspense fallback={<MapSkeleton className="h-[260px] rounded-2xl" />}>
             <LocationPicker value={form.location} onChange={set("location")} />
           </Suspense>
           <p className="font-mono text-xs text-mute" role="status">{form.location ? `${form.location.latitude}, ${form.location.longitude}` : "No location chosen yet"}</p>
@@ -83,7 +83,7 @@ export function AdminSitesPage() {
   return (
     <Page>
       <PageHeader title="Manage sites" description="Publish new spaces and pause or reopen existing ones. Every change is recorded on the public activity log." actions={!adding && <Button onClick={() => setAdding(true)}><Icon name="plus" className="size-4" />Add vending site</Button>} />
-      <StatStrip items={[{ label: "Listed", value: list.length }, { label: "Available", value: counts.available, tone: "up" }, { label: "Allocated", value: counts.allocated }, { label: "Paused", value: counts.inactive }]} />
+      <StatStrip loading={loading} items={[{ label: "Listed", value: list.length }, { label: "Available", value: counts.available, tone: "up" }, { label: "Allocated", value: counts.allocated }, { label: "Paused", value: counts.inactive }]} />
       {(error || loadError) && <p role="alert" className="text-[13px] text-red-600">{error || loadError}</p>}
       {adding && <AddSiteForm onAdd={add} onCancel={() => setAdding(false)} />}
 
@@ -103,7 +103,7 @@ export function AdminSitesPage() {
                 </td>
               </tr>
             ))}
-            {!list.length && <tr><td colSpan="5" className="px-5 py-6 text-center text-[13px] text-mute">{loading ? "Loading sites…" : "No sites yet."}</td></tr>}
+            {!list.length && <tr><td colSpan="5" className="text-center text-[13px] text-mute">{loading ? <SkeletonRows rows={4} /> : <span className="block px-5 py-6">No sites yet.</span>}</td></tr>}
           </tbody>
         </table>
       </Card>

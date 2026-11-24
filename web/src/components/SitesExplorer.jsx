@@ -205,7 +205,7 @@ export default function SitesExplorer({ query = "", fill = false }) {
             {filteredSites.map((site) => (
               <SiteRow key={site.id} site={site} selected={selectedSite?.id === site.id} onSelect={select} />
             ))}
-            {!filteredSites.length && <EmptyState title={error ? "Could not load sites" : loading ? "Loading sites…" : "No matching sites"}>{error || (loading ? "One moment." : "Try a different district or status.")}</EmptyState>}
+            {!filteredSites.length && <EmptyState loading={loading && !error} title={error ? "Could not load sites" : "No matching sites"}>{error || "Try a different district or status."}</EmptyState>}
           </div>
         </Float>
       )}
