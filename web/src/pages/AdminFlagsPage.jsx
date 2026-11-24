@@ -27,6 +27,7 @@ function FlagCard({ flag, onReviewed }) {
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-mono text-[12.5px] font-medium">{shortId("FL", flag.id)}</span>
         <Chip tone={TONE[flag.status]}>{LABEL[flag.status]}</Chip>
+        {!closed && <Chip tone={new Date(flag.dueAt) < new Date() ? "bad" : "idle"}>{new Date(flag.dueAt) < new Date() ? "Overdue, was due " : "Answer due "}{formatDay(flag.dueAt)}</Chip>}
         <span className="text-xs text-mute">{flag.category} · {flag.allocation.site.name} ({shortId("EV", flag.allocationId)}) · {formatDay(flag.createdAt)}</span>
       </div>
       <p className="mt-2.5 text-[13.5px] leading-relaxed">{flag.note}</p>

@@ -69,7 +69,7 @@ export function MyFlagsPage() {
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-mono text-[12.5px] font-medium">{shortId("FL", f.id)}</span>
                 <Chip tone={TONE[f.status]}>{LABEL[f.status]}</Chip>
-                <span className="text-xs text-mute">{f.category} · {shortId("EV", f.allocationId)} · {formatDay(f.createdAt)}</span>
+                <span className="text-xs text-mute">{f.category} · {shortId("EV", f.allocationId)} · {formatDay(f.createdAt)}{f.status === "open" && ` · answer due ${formatDay(f.dueAt)}`}</span>
               </div>
               <p className="mt-2 text-[13.5px] leading-relaxed">{f.note}</p>
               {f.reviewNote && <p className="mt-2 rounded-xl bg-sunken px-3 py-2 text-[13px] text-mute">Administrator: {f.reviewNote}</p>}

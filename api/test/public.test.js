@@ -28,7 +28,7 @@ before(async () => {
   const allocation = await prisma.allocation.create({
     data: { siteId: site.id, applicationId: application.id, outcome: "approved", reason: "private reason", reasonCategory: "override", queuePosition: 3, waitingCount: 5, outOfOrder: true, decidedById: vendor.id }
   });
-  await prisma.flag.create({ data: { allocationId: allocation.id, vendorId: vendor.id, category: "Queue order", note: "private note" } });
+  await prisma.flag.create({ data: { allocationId: allocation.id, vendorId: vendor.id, category: "Queue order", note: "private note", dueAt: new Date(Date.now() - 86400000) } });
 });
 
 after(async () => {
@@ -83,6 +83,27 @@ test("public data never contains personal details", async () => {
     assert.ok(!text.includes(email));
     assert.ok(!text.includes("private"));
   }
+});
+
+test("the flag log shows an overdue open flag", async () => {
+  const res = await request(app).get("/api/v1/public/flags");
+  const flag = res.body.data.find((f) => f.category === "Queue order");
+  assert.equal(flag.overdue, true);
+  assert.equal(flag.daysToAnswer, null);
+});
+
+test("anyone reads the accountability summary", async () => {
+  const res = await request(app).get("/api/v1/public/summary");
+  assert.equal(res.status, 200);
+  assert.ok(res.body.data.allocations.total >= 1);
+  assert.ok(res.body.data.allocations.outOfOrder >= 1);
+  assert.ok(res.body.data.flags.overdue >= 1);
+  assert.ok(res.body.data.allocations.byDistrict.some((d) => d.district === "Gasabo"));
+});
+
+test("the summary never contains personal details", async () => {
+  const text = JSON.stringify((await request(app).get("/api/v1/public/summary")).body);
+  assert.ok(!text.includes("Secret Vendor") && !text.includes(email));
 });
 
 test("downloads a CSV", async () => {
