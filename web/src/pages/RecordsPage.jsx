@@ -21,6 +21,8 @@ export function RecordsPage() {
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [status, setStatus] = useState("all");
   const [district, setDistrict] = useState("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -31,6 +33,11 @@ export function RecordsPage() {
         (!q || [s.reference, s.name, s.district, s.sector, s.type, STATUS[s.status][1]].some((text) => text.toLowerCase().includes(q))))
       .sort((a, b) => ORDER[a.status] - ORDER[b.status] || a.name.localeCompare(b.name));
   }, [sites, search, status, district]);
+
+  const visibleLog = useMemo(
+    () => statusLog.filter((e) => (!from || e.date >= from) && (!to || e.date <= to)),
+    [statusLog, from, to]
+  );
 
   const openCount = sites.filter((s) => s.status === "available").length;
 
@@ -99,24 +106,34 @@ export function RecordsPage() {
               <span className="pv-eyebrow"><i />Activity</span>
               <h2 id="activity-h" className="pv-h2">Activity log</h2>
             </div>
-            <p className="pv-muted">Newest first. Entries are permanent. A correction is recorded as a new entry, and earlier entries stay as written.</p>
+            <p className="pv-muted">Newest first. Entries are permanent. A correction is recorded as a new entry, and earlier entries stay as written. "Queue" shows where the allocated application stood among those waiting at the time.</p>
           </div>
+          <form className="pv-rv" style={{ display: "flex", flexWrap: "wrap", gap: 12, marginBottom: 16 }} onSubmit={(e) => e.preventDefault()}>
+            <label className="pv-field">From <input type="date" value={from} max={to || undefined} onChange={(e) => setFrom(e.target.value)} /></label>
+            <label className="pv-field">To <input type="date" value={to} min={from || undefined} onChange={(e) => setTo(e.target.value)} /></label>
+            {(from || to) && <button type="button" className="pv-muted underline" onClick={() => { setFrom(""); setTo(""); }}>Clear dates</button>}
+          </form>
           <div className="pv-table-wrap pv-rv">
             <table className="pv-table">
               <caption className="sr-only">Changes to vending spaces, newest first</caption>
-              <thead><tr>{["Reference", "Date", "Space", "Event"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
+              <thead><tr>{["Reference", "Date", "Space", "Event", "Queue", "Basis"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
               <tbody>
-                {statusLog.map((e) => (
+                {visibleLog.map((e) => (
                   <tr key={e.id}>
                     <th scope="row">{shortId("EV", e.id)}</th>
                     <td style={{ whiteSpace: "nowrap" }}>{formatDate(e.date)}</td>
                     <td><b>{e.site}</b><span className="sub">{e.district}</span></td>
                     <td><span className={`pv-pill ${EVENT_TONE[e.event]}`}>{e.event}</span></td>
+                    <td style={{ whiteSpace: "nowrap" }}>
+                      {e.queuePosition ? `${e.queuePosition} of ${e.waitingCount}` : "n/a"}
+                      {e.outOfOrder && <> <span className="pv-pill bad">Out of queue order</span></>}
+                    </td>
+                    <td>{e.reasonCategory}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
-            {!statusLog.length && <p className="pv-empty">{error || (loading ? "Loading…" : "No allocations yet.")}</p>}
+            {!visibleLog.length && <p className="pv-empty">{error || (loading ? "Loading…" : statusLog.length ? "No entries in this date range." : "No allocations yet.")}</p>}
           </div>
         </div>
       </section>
