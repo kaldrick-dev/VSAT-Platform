@@ -46,16 +46,10 @@
 .pv-row{display:flex;gap:12px;flex-wrap:wrap}
 
 /* nav */
-.pv-nav{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:50;width:min(calc(var(--maxw) - var(--pad) * 2),calc(100% - var(--pad) * 2));height:60px;display:flex;align-items:center;justify-content:space-between;padding:0 8px 0 20px;border-radius:999px;color:#fff;background:rgba(18,19,22,.62);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 1px rgba(255,255,255,.07);transition:background .4s}
+.pv-nav{position:fixed;top:12px;left:50%;transform:translateX(-50%);z-index:50;width:min(calc(var(--maxw) - var(--pad) * 2),calc(100% - var(--pad) * 2));height:60px;display:flex;align-items:center;justify-content:space-between;color:#fff;mix-blend-mode:difference}
 .pv-logo{font-family:"Bruno Ace SC",sans-serif;font-size:20px;line-height:28px;font-weight:700;letter-spacing:.02em;display:inline-flex;align-items:center}
-.pv-links{display:flex;gap:4px;position:absolute;left:50%;transform:translateX(-50%)}
-.pv-links a{padding:8px 14px;border-radius:999px;font-size:14px;line-height:20px;opacity:.72;transition:opacity .3s,background .3s}
-.pv-links a:hover,.pv-links a[aria-current="page"]{opacity:1;background:rgba(127,135,155,.18)}
-.pv-actions{display:flex;align-items:center;gap:8px}
 .pv-nav .pv-btn{height:44px;font-size:14px;background:#fff;color:var(--ink)}
 .pv-nav .pv-btn:hover{background:var(--lime)}
-.pv-burger{display:none;width:44px;height:44px;border-radius:50%;place-items:center;background:rgba(255,255,255,.1);color:#fff;border:0;cursor:pointer}
-.pv-sheet{display:none}
 
 /* hero */
 .pv-hero{position:relative;min-height:100dvh;min-height:max(100dvh,720px);background:var(--ink);color:#fff;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;padding-bottom:56px}
@@ -204,12 +198,7 @@
   .pv-h1{font-size:44px;line-height:46px}
   .pv-h2{font-size:36px;line-height:40px}
   .pv-head{grid-template-columns:1fr;gap:20px;margin-bottom:48px}
-  .pv-links,.pv-actions .pv-btn{display:none}
-  .pv-burger{display:grid}
-  .pv-sheet{display:grid;position:fixed;top:84px;left:16px;right:16px;z-index:49;gap:4px;padding:12px;border-radius:20px;background:rgba(18,19,22,.94);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)}
-  .pv-sheet a{padding:14px 16px;border-radius:12px}
-  .pv-sheet a:hover{background:rgba(255,255,255,.08)}
-  .pv-hero-bottom{flex-direction:column;align-items:flex-start;gap:24px}
+    .pv-hero-bottom{flex-direction:column;align-items:flex-start;gap:24px}
   .pv-hero .pv-row{flex-direction:column;align-items:stretch}
   .pv-float{display:none}
   .pv-docs,.pv-cards3,.pv-roles{grid-template-columns:1fr}
