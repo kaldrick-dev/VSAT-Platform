@@ -24,6 +24,7 @@ enum ApplicationStatus {
   approved
   rejected
   withdrawn
+  revoked
 }
 
 enum Outcome {

@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState } from "react";
+import { Suspense, lazy, useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Button, Card, Chip, Dropdown, Eyebrow, Field, Icon, MapSkeleton, Page, PageHeader, SkeletonRows, StatStrip, StatusChip, fieldClass } from "../components/ui.jsx";
 import { api } from "../lib/api.js";
@@ -8,6 +8,58 @@ import { TRADES } from "../data/workspace.js";
 
 const LocationPicker = lazy(() => import("../components/LocationPicker.jsx"));
 const EMPTY = { name: "", district: districts[0], sector: "", size: "", fee: "", type: TRADES[0], terms: "", location: null };
+
+const REVOKE_CATEGORIES = [
+  ["violation", "Broke the site terms"],
+  ["not_used", "Space not used"],
+  ["error", "Allocated in error"],
+  ["other", "Other"]
+];
+
+function RevokeForm({ site, onDone, onCancel }) {
+  const [category, setCategory] = useState("violation");
+  const [reason, setReason] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const panel = useRef(null);
+  const typed = reason.trim().length;
+
+  useEffect(() => { panel.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, []);
+
+  async function submit(event) {
+    event.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await api.revokeSite(site.id, { reason: reason.trim(), reasonCategory: category });
+      onDone();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card ref={panel} className="p-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-[15px] font-semibold">Revoke the allocation of {site.name}</h2>
+        <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+      </div>
+      <p className="mt-2 text-[13px] text-mute">The vendor is told, the space reopens for applications, and a new <strong className="font-medium text-ink">Revoked</strong> entry is added to the log. The original approval stays as written. The reason category is public; your written reason is not.</p>
+      <form className="mt-5 grid gap-4 md:max-w-xl" onSubmit={submit}>
+        <Field label="Reason category (published)"><Dropdown label="Reason category" value={category} onChange={setCategory} options={REVOKE_CATEGORIES} /></Field>
+        <Field label="Reason (recorded in the log)" hint={`${typed} / 20 characters minimum`}>
+          <textarea rows="3" className={`${fieldClass} h-auto resize-y py-2.5`} value={reason} onChange={(event) => setReason(event.target.value)} placeholder="e.g. The stall has been empty for three months" />
+        </Field>
+        {error && <p role="alert" className="text-[13px] text-red-600">{error}</p>}
+        <div className="flex flex-wrap items-center gap-3">
+          <Button type="submit" disabled={busy || typed < 20}>{busy ? "Revoking…" : "Revoke allocation"}</Button>
+          <p className="flex items-center gap-1.5 text-xs text-mute"><Icon name="lock" className="size-3" />This cannot be edited or deleted afterwards.</p>
+        </div>
+      </form>
+    </Card>
+  );
+}
 
 function AddSiteForm({ onAdd, onCancel }) {
   const [form, setForm] = useState(EMPTY);
@@ -52,6 +104,7 @@ export function AdminSitesPage() {
   const { sites: list, loading, error: loadError, reload } = useSites();
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(params.get("new") === "1");
+  const [revoking, setRevoking] = useState(null);
 
   const counts = { available: 0, allocated: 0, inactive: 0 };
   list.forEach((s) => { counts[s.status] += 1; });
@@ -82,10 +135,11 @@ export function AdminSitesPage() {
 
   return (
     <Page>
-      <PageHeader title="Manage sites" description="Publish new spaces and pause or reopen existing ones. Every change is recorded on the public activity log." actions={!adding && <Button onClick={() => setAdding(true)}><Icon name="plus" className="size-4" />Add vending site</Button>} />
+      <PageHeader title="Manage sites" description="Publish new spaces, pause or reopen them, and revoke an allocation. Every change is recorded on the public activity log." actions={!adding && <Button onClick={() => setAdding(true)}><Icon name="plus" className="size-4" />Add vending site</Button>} />
       <StatStrip loading={loading} items={[{ label: "Listed", value: list.length }, { label: "Available", value: counts.available, tone: "up" }, { label: "Allocated", value: counts.allocated }, { label: "Paused", value: counts.inactive }]} />
       {(error || loadError) && <p role="alert" className="text-[13px] text-red-600">{error || loadError}</p>}
       {adding && <AddSiteForm onAdd={add} onCancel={() => setAdding(false)} />}
+      {revoking && <RevokeForm site={revoking} onCancel={() => setRevoking(null)} onDone={() => { setRevoking(null); setError(""); reload(); }} />}
 
       <Card className="overflow-x-auto">
         <ul className="divide-y divide-line md:hidden">
@@ -98,7 +152,9 @@ export function AdminSitesPage() {
               <p className="text-[13px] text-mute">{s.sector}, {s.district} · {s.size} · {s.type}</p>
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[13.5px] font-medium tabular-nums">{formatRwf(s.fee)} / month</span>
-                {s.status !== "allocated" && <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
+                {s.status === "allocated"
+                  ? <Button variant="secondary" size="sm" onClick={() => { setAdding(false); setRevoking(s); }}>Revoke</Button>
+                  : <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
               </div>
             </li>
           ))}
@@ -115,7 +171,9 @@ export function AdminSitesPage() {
                 <td className="px-5 py-3.5 text-[13px] tabular-nums">{formatRwf(s.fee)}</td>
                 <td className="px-5 py-3.5"><StatusChip status={s.status} /></td>
                 <td className="px-5 py-3.5 text-right">
-                  {s.status !== "allocated" && <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
+                  {s.status === "allocated"
+                    ? <Button variant="secondary" size="sm" onClick={() => { setAdding(false); setRevoking(s); }}>Revoke</Button>
+                    : <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
                 </td>
               </tr>
             ))}

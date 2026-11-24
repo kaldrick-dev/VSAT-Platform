@@ -79,6 +79,7 @@ export const api = {
   listApplications: (filters) => request("/applications", { query: filters }),
   decideApplication: (id, data) => request(`/applications/${id}`, { method: "PATCH", body: data }),
 
+  revokeSite: (siteId, data) => request(`/sites/${siteId}/revoke`, { method: "POST", body: data }),
   listAllocations: (filters) => request("/allocations", { query: filters }),
 
   myFlags: () => request("/flags/me"),
