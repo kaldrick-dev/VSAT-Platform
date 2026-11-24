@@ -16,8 +16,10 @@ function Nav() {
 
   return (
     <header className="pv-nav">
-      <Link to="/" aria-label="VSAT home"><Logo /></Link>
-      <Link to={cta.to} className="pv-btn">{cta.label}</Link>
+      <div className="pv-wrap pv-nav-in">
+        <Link to="/" aria-label="VSAT home"><Logo /></Link>
+        <Link to={cta.to} className="pv-btn">{cta.label}</Link>
+      </div>
     </header>
   );
 }
