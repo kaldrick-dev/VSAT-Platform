@@ -100,13 +100,17 @@ model Application {
 
 // Insert-only log: a database trigger rejects UPDATE and DELETE.
 model Allocation {
-  id            String   @id @default(uuid())
-  siteId        String   @map("site_id")
-  applicationId String   @map("application_id")
-  outcome       Outcome
-  reason        String
-  decidedById   String   @map("decided_by_id")
-  decidedAt     DateTime @default(now()) @map("decided_at")
+  id             String   @id @default(uuid())
+  siteId         String   @map("site_id")
+  applicationId  String   @map("application_id")
+  outcome        Outcome
+  reason         String
+  reasonCategory String   @default("other") @map("reason_category")
+  queuePosition  Int      @default(0) @map("queue_position")
+  waitingCount   Int      @default(0) @map("waiting_count")
+  outOfOrder     Boolean  @default(false) @map("out_of_order")
+  decidedById    String   @map("decided_by_id")
+  decidedAt      DateTime @default(now()) @map("decided_at")
 
   site        Site        @relation(fields: [siteId], references: [id])
   application Application @relation(fields: [applicationId], references: [id])

@@ -5,19 +5,19 @@ import request from "supertest";
 import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
 
-const emails = ["dec-admin@example.com", "dec-vendor@example.com"];
+const emails = ["dec-admin@example.com", "dec-vendor@example.com", "dec-vendor2@example.com"];
 const password = "password123";
-let adminToken, vendorToken, applicationId, vendorId;
+let adminToken, vendorToken, applicationId, vendorId, firstId, secondId, otherId, siteId;
 
 const login = async (email) => (await request(app).post("/api/v1/auth/login").send({ email, password })).body.token;
 
 const cleanup = async () => {
   await prisma.notification.deleteMany({ where: { user: { email: { in: emails } } } });
   await prisma.$executeRaw`ALTER TABLE allocations DISABLE TRIGGER allocations_no_update_delete`;
-  await prisma.allocation.deleteMany({ where: { site: { reference: "DEC-TEST" } } });
+  await prisma.allocation.deleteMany({ where: { site: { reference: { startsWith: "DEC-TEST" } } } });
   await prisma.$executeRaw`ALTER TABLE allocations ENABLE TRIGGER allocations_no_update_delete`;
-  await prisma.application.deleteMany({ where: { site: { reference: "DEC-TEST" } } });
-  await prisma.site.deleteMany({ where: { reference: "DEC-TEST" } });
+  await prisma.application.deleteMany({ where: { site: { reference: { startsWith: "DEC-TEST" } } } });
+  await prisma.site.deleteMany({ where: { reference: { startsWith: "DEC-TEST" } } });
   await prisma.user.deleteMany({ where: { email: { in: emails } } });
 };
 
@@ -32,6 +32,14 @@ before(async () => {
   });
   const application = await prisma.application.create({ data: { siteId: site.id, vendorId } });
   applicationId = application.id;
+  const other = await prisma.user.create({ data: { fullName: "Vendor Two", email: emails[2], passwordHash } });
+  otherId = other.id;
+  siteId = site.id;
+  const queued = await prisma.site.create({
+    data: { reference: "DEC-TEST-Q", name: "Dec Queue", district: "Gasabo", sector: "Remera", type: "Produce", size: "5 m²", fee: 1000, latitude: -1.9, longitude: 30.1, terms: "none" }
+  });
+  firstId = (await prisma.application.create({ data: { siteId: queued.id, vendorId, appliedAt: new Date(Date.now() - 60000) } })).id;
+  secondId = (await prisma.application.create({ data: { siteId: queued.id, vendorId: other.id } })).id;
   adminToken = await login(emails[0]);
   vendorToken = await login(emails[1]);
 });
@@ -76,4 +84,41 @@ test("admin approves an application", async () => {
 test("rejects deciding twice", async () => {
   const res = await request(app).patch(`/api/v1/applications/${applicationId}`).set("Authorization", `Bearer ${adminToken}`).send({ outcome: "rejected", reason: "Changed mind" });
   assert.equal(res.status, 409);
+});
+
+const decide = (id, body) => request(app).patch(`/api/v1/applications/${id}`).set("Authorization", `Bearer ${adminToken}`).send(body);
+
+test("refuses to approve an application that skips the queue", async () => {
+  const res = await decide(secondId, { outcome: "approved", reason: "I like this one" });
+  assert.equal(res.status, 409);
+  assert.equal(res.body.code, "out_of_queue_order");
+});
+
+test("an override needs a long reason", async () => {
+  const res = await decide(secondId, { outcome: "approved", reason: "too short", outOfOrder: true });
+  assert.equal(res.status, 400);
+});
+
+test("rejecting a later application does not need an override", async () => {
+  const res = await decide(secondId, { outcome: "rejected", reason: "Documents missing", reasonCategory: "documents" });
+  assert.equal(res.status, 200);
+  const entry = await prisma.allocation.findFirst({ where: { applicationId: secondId } });
+  assert.equal(entry.outOfOrder, false);
+  assert.equal(entry.reasonCategory, "documents");
+});
+
+test("approving the first application records its queue position", async () => {
+  const res = await decide(firstId, { outcome: "approved", reason: "First in queue order", reasonCategory: "queue_order" });
+  assert.equal(res.status, 200);
+  const entry = await prisma.allocation.findFirst({ where: { applicationId: firstId } });
+  assert.equal(entry.queuePosition, 1);
+  assert.equal(entry.waitingCount, 1);
+  assert.equal(entry.outOfOrder, false);
+});
+
+test("refuses to allocate a site that is already allocated", async () => {
+  const late = await prisma.application.create({ data: { siteId, vendorId: otherId } });
+  const res = await decide(late.id, { outcome: "approved", reason: "Trying after the site is gone", outOfOrder: true });
+  assert.equal(res.status, 409);
+  assert.equal(res.body.code, "site_unavailable");
 });

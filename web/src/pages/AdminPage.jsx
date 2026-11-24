@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button, Card, Chip, EmptyState, Eyebrow, Field, Icon, Page, PageHeader, StatStrip, fieldClass } from "../components/ui.jsx";
+import { Button, Card, Chip, Dropdown, EmptyState, Eyebrow, Field, Icon, Page, PageHeader, StatStrip, fieldClass } from "../components/ui.jsx";
 import { useApi } from "../hooks/useApi.js";
 import { shortId } from "../hooks/usePublicData.js";
 import { api } from "../lib/api.js";
@@ -18,16 +18,28 @@ function VendorDocuments({ vendorId }) {
   );
 }
 
+const CATEGORIES = [
+  ["queue_order", "First in queue order"],
+  ["documents", "Documents missing or invalid"],
+  ["eligibility", "Not eligible for this site"],
+  ["site_terms", "Site terms not met"],
+  ["other", "Other"]
+];
+
 function DecisionForm({ application, onDecided }) {
   const [reason, setReason] = useState("");
+  const [category, setCategory] = useState("queue_order");
+  const [override, setOverride] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const skipping = application.queuePosition > 1;
+  const longEnough = reason.trim().length >= (override ? 20 : 3);
 
   async function decide(outcome) {
     setBusy(true);
     setError("");
     try {
-      await api.decideApplication(application.id, { outcome, reason: reason.trim() });
+      await api.decideApplication(application.id, { outcome, reason: reason.trim(), reasonCategory: category, outOfOrder: outcome === "approved" && skipping && override });
       onDecided();
     } catch (err) {
       setError(err.message);
@@ -43,13 +55,26 @@ function DecisionForm({ application, onDecided }) {
       </dl>
       <div><Eyebrow>Documents</Eyebrow><div className="mt-1"><VendorDocuments vendorId={application.vendor.id} /></div></div>
 
-      <form className="grid gap-4 md:grid-cols-[1fr_auto] md:items-end" onSubmit={(event) => event.preventDefault()}>
-        <Field label="Stated reason (required)">
+      {skipping && (
+        <div className="rounded-2xl bg-sunken px-4 py-3 text-[13px]">
+          <p><strong className="font-medium">{application.queuePosition - 1} earlier application(s) for this site are still waiting.</strong> You can reject this one, or decide the earlier ones first.</p>
+          <label className="mt-2 flex items-start gap-2">
+            <input type="checkbox" className="mt-0.5" checked={override} onChange={(event) => setOverride(event.target.checked)} />
+            <span>Approve anyway. This is published on the public log as <em>out of queue order</em>, and the reason must be at least 20 characters.</span>
+          </label>
+        </div>
+      )}
+
+      <form className="grid gap-4 md:grid-cols-[14rem_1fr_auto] md:items-end" onSubmit={(event) => event.preventDefault()}>
+        <Field label="Reason category (published)">
+          <Dropdown label="Reason category" value={category} onChange={setCategory} options={CATEGORIES} />
+        </Field>
+        <Field label={override ? "Reason for the override (20+ characters)" : "Stated reason (required)"}>
           <textarea rows="2" value={reason} onChange={(event) => setReason(event.target.value)} placeholder="e.g. First eligible applicant in timestamp order" className={`${fieldClass} h-auto resize-none py-2.5`} />
         </Field>
         <div className="flex gap-2">
           <Button variant="secondary" disabled={busy || reason.trim().length < 3} onClick={() => decide("rejected")}>Reject</Button>
-          <Button disabled={busy || reason.trim().length < 3} onClick={() => decide("approved")}>
+          <Button disabled={busy || !longEnough || (skipping && !override)} onClick={() => decide("approved")}>
             Approve {shortId("APP", application.id)}
             <Icon name="arrow" className="size-4" />
           </Button>
@@ -107,7 +132,7 @@ export function AdminPage() {
           <Eyebrow>Reference</Eyebrow><Eyebrow>Site</Eyebrow><Eyebrow>Submitted</Eyebrow><Eyebrow>Documents</Eyebrow><span />
         </div>
 
-        {queue.map((application, index) => {
+        {queue.map((application) => {
           const open = openId === application.id;
           const docs = application.vendor._count.documents;
           return (
@@ -119,7 +144,7 @@ export function AdminPage() {
                 className={`grid w-full items-center gap-x-4 gap-y-1.5 px-5 py-3.5 text-left transition hover:bg-sunken/50 ${COLUMNS}`}
               >
                 <span className="flex items-center gap-2.5">
-                  <span className="grid size-6 place-items-center rounded-md bg-sunken font-mono text-[11px] text-mute">{index + 1}</span>
+                  <span className="grid size-6 place-items-center rounded-md bg-sunken font-mono text-[11px] text-mute" title="Position in this site's queue">{application.queuePosition}</span>
                   <span className="font-mono text-[12.5px] font-medium">{shortId("APP", application.id)}</span>
                 </span>
                 <span>
