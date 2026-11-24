@@ -26,7 +26,7 @@ before(async () => {
   });
   const application = await prisma.application.create({ data: { siteId: site.id, vendorId: vendor.id, status: "approved" } });
   const allocation = await prisma.allocation.create({
-    data: { siteId: site.id, applicationId: application.id, outcome: "approved", reason: "private reason", decidedById: vendor.id }
+    data: { siteId: site.id, applicationId: application.id, outcome: "approved", reason: "private reason", reasonCategory: "override", queuePosition: 3, waitingCount: 5, outOfOrder: true, decidedById: vendor.id }
   });
   await prisma.flag.create({ data: { allocationId: allocation.id, vendorId: vendor.id, category: "Queue order", note: "private note" } });
 });
@@ -45,6 +45,28 @@ test("anyone reads the spaces", async () => {
 test("anyone reads the activity log", async () => {
   const res = await request(app).get("/api/v1/public/activity");
   assert.ok(res.body.data.some((a) => a.site === "Public Test" && a.event === "Allocated"));
+});
+
+test("the activity log shows queue context without reasons", async () => {
+  const res = await request(app).get("/api/v1/public/activity");
+  const entry = res.body.data.find((a) => a.site === "Public Test");
+  assert.equal(entry.queuePosition, 3);
+  assert.equal(entry.waitingCount, 5);
+  assert.equal(entry.outOfOrder, true);
+  assert.equal(entry.reasonCategory, "Queue override");
+});
+
+test("filters the activity log by date", async () => {
+  const future = await request(app).get("/api/v1/public/activity?from=2999-01-01");
+  assert.ok(!future.body.data.some((a) => a.site === "Public Test"));
+  const today = new Date().toISOString().slice(0, 10);
+  const current = await request(app).get(`/api/v1/public/activity?from=${today}&to=${today}`);
+  assert.ok(current.body.data.some((a) => a.site === "Public Test"));
+});
+
+test("rejects a badly formatted date", async () => {
+  const res = await request(app).get("/api/v1/public/activity?from=yesterday");
+  assert.equal(res.status, 400);
 });
 
 test("anyone reads the flag log", async () => {

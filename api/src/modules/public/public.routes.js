@@ -19,6 +19,6 @@ const datasets = { spaces: publicService.listSpaces, activity: publicService.lis
 
 for (const [name, load] of Object.entries(datasets)) {
   publicRoutes.get(`/${name}`, validate({ query: formatSchema }), async (req, res) => {
-    send(res, req.query.format, name, await load());
+    send(res, req.query.format, name, await load(req.query));
   });
 }
