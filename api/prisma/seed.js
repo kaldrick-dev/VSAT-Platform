@@ -21,7 +21,25 @@ for (const [fullName, email, role] of [["Demo Admin", "admin@example.com", "admi
 
 for (const [reference, name, district, sector, type, size, fee, latitude, longitude, status, terms] of sites) {
   const data = { reference, name, district, sector, type, size, fee, latitude, longitude, status, terms };
-  await prisma.site.upsert({ where: { reference }, update: data, create: data });
+  // Re-running the seed must not undo real decisions, so an existing site keeps its status.
+  const { status: _status, ...details } = data;
+  await prisma.site.upsert({ where: { reference }, update: details, create: data });
+}
+
+// Allocated demo sites get a real decision in the log, so an admin can revoke them.
+const admin = await prisma.user.findUnique({ where: { email: "admin@example.com" } });
+const vendor = await prisma.user.findUnique({ where: { email: "vendor@example.com" } });
+for (const reference of ["VSAT-218", "VSAT-205"]) {
+  const site = await prisma.site.findUnique({ where: { reference } });
+  if (await prisma.allocation.findFirst({ where: { siteId: site.id } })) continue;
+  const application = await prisma.application.upsert({
+    where: { siteId_vendorId: { siteId: site.id, vendorId: vendor.id } },
+    update: {},
+    create: { siteId: site.id, vendorId: vendor.id, status: "approved", statement: "Demo allocation" }
+  });
+  await prisma.allocation.create({
+    data: { siteId: site.id, applicationId: application.id, outcome: "approved", reason: "Demo allocation: first in queue", reasonCategory: "queue_order", queuePosition: 1, waitingCount: 1, decidedById: admin.id }
+  });
 }
 
 console.log("Seeded 2 users and", sites.length, "sites");

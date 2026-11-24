@@ -15,6 +15,9 @@ const REASON_LABELS = {
   eligibility: "Eligibility",
   site_terms: "Site terms",
   override: "Queue override",
+  violation: "Rule violation",
+  not_used: "Space not used",
+  error: "Recorded in error",
   other: "Other"
 };
 

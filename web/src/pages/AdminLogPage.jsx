@@ -9,7 +9,7 @@ import { downloadFile, toCsv } from "../lib/download.js";
 const COLUMNS = [["id", "Reference"], ["date", "Date"], ["site", "Site"], ["outcome", "Outcome"], ["application", "Application"], ["applicant", "Applicant"], ["queue", "Queue"], ["reason", "Stated reason"], ["by", "Decided by"]];
 
 const toRow = (a) => ({
-  id: shortId("EV", a.id), date: a.decidedAt.slice(0, 10), site: a.site.name, outcome: a.outcome === "approved" ? "Approved" : "Rejected",
+  id: shortId("EV", a.id), date: a.decidedAt.slice(0, 10), site: a.site.name, outcome: a.outcome[0].toUpperCase() + a.outcome.slice(1),
   application: shortId("APP", a.application.id), applicant: a.application.vendor.fullName, reason: a.reason, queue: a.queuePosition ? `${a.queuePosition} of ${a.waitingCount}` : "n/a", outOfOrder: a.outOfOrder, by: a.decidedBy
 });
 
@@ -35,7 +35,7 @@ export function AdminLogPage() {
       <Card className="overflow-hidden">
         <div className="flex flex-wrap items-center gap-3 p-4">
           <input className={`${fieldClass} max-w-[320px]`} type="search" aria-label="Search the decision log" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search reference, site, application or reason" />
-          <Segmented label="Outcome" value={outcome} onChange={setOutcome} options={[["all", "All"], ["Approved", "Approved"], ["Rejected", "Rejected"]]} />
+          <Segmented label="Outcome" value={outcome} onChange={setOutcome} options={[["all", "All"], ["Approved", "Approved"], ["Rejected", "Rejected"], ["Revoked", "Revoked"]]} />
         </div>
         <div className="overflow-x-auto">
           <ul className="divide-y divide-line md:hidden">
