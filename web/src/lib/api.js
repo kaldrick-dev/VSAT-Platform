@@ -4,8 +4,6 @@
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 const TOKEN_KEY = "vsat.token";
 
-export const publicUrl = (name, format) => `${BASE_URL}/public/${name}?format=${format}`;
-
 export const auth = {
   get() {
     try { return localStorage.getItem(TOKEN_KEY); } catch { return null; }
@@ -14,6 +12,17 @@ export const auth = {
     try { token ? localStorage.setItem(TOKEN_KEY, token) : localStorage.removeItem(TOKEN_KEY); } catch { /* storage unavailable */ }
   }
 };
+
+// Downloads need the token, so they are fetched and saved instead of opened as plain links.
+export async function downloadDataset(name, format) {
+  const res = await fetch(`${BASE_URL}/public/${name}?format=${format}`, { headers: { Authorization: `Bearer ${auth.get()}` } });
+  if (!res.ok) throw new Error("Could not download this file. Please sign in again.");
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(await res.blob());
+  link.download = `${name}.${format}`;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
 
 export class ApiError extends Error {
   constructor(status, message, details) {

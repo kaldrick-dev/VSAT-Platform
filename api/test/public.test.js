@@ -6,6 +6,7 @@ import { app } from "../src/app.js";
 import { prisma } from "../src/lib/prisma.js";
 
 const email = "pub-vendor@example.com";
+let token;
 
 const cleanup = async () => {
   await prisma.flag.deleteMany({ where: { vendor: { email } } });
@@ -21,6 +22,7 @@ before(async () => {
   await cleanup();
   const passwordHash = await bcrypt.hash("password123", 4);
   const vendor = await prisma.user.create({ data: { fullName: "Secret Vendor", email, passwordHash } });
+  token = (await request(app).post("/api/v1/auth/login").send({ email, password: "password123" })).body.token;
   const site = await prisma.site.create({
     data: { reference: "PUB-TEST", name: "Public Test", district: "Gasabo", sector: "Remera", type: "Produce", size: "5 m²", fee: 1000, latitude: -1.9, longitude: 30.1, terms: "none" }
   });
@@ -36,19 +38,28 @@ after(async () => {
   await prisma.$disconnect();
 });
 
-test("anyone reads the spaces", async () => {
-  const res = await request(app).get("/api/v1/public/spaces");
+test("rejects public data without a token", async () => {
+  for (const path of ["spaces", "activity", "flags", "summary"]) {
+    const res = await request(app).get(`/api/v1/public/${path}`);
+    assert.equal(res.status, 401);
+  }
+  const csv = await request(app).get("/api/v1/public/spaces?format=csv");
+  assert.equal(csv.status, 401);
+});
+
+test("a signed-in user reads the spaces", async () => {
+  const res = await request(app).get("/api/v1/public/spaces").set("Authorization", `Bearer ${token}`);
   assert.equal(res.status, 200);
   assert.ok(res.body.data.some((s) => s.reference === "PUB-TEST"));
 });
 
-test("anyone reads the activity log", async () => {
-  const res = await request(app).get("/api/v1/public/activity");
+test("a signed-in user reads the activity log", async () => {
+  const res = await request(app).get("/api/v1/public/activity").set("Authorization", `Bearer ${token}`);
   assert.ok(res.body.data.some((a) => a.site === "Public Test" && a.event === "Allocated"));
 });
 
 test("the activity log shows queue context without reasons", async () => {
-  const res = await request(app).get("/api/v1/public/activity");
+  const res = await request(app).get("/api/v1/public/activity").set("Authorization", `Bearer ${token}`);
   const entry = res.body.data.find((a) => a.site === "Public Test");
   assert.equal(entry.reference, "PUB-TEST");
   assert.equal(entry.queuePosition, 3);
@@ -58,27 +69,27 @@ test("the activity log shows queue context without reasons", async () => {
 });
 
 test("filters the activity log by date", async () => {
-  const future = await request(app).get("/api/v1/public/activity?from=2999-01-01");
+  const future = await request(app).get("/api/v1/public/activity?from=2999-01-01").set("Authorization", `Bearer ${token}`);
   assert.ok(!future.body.data.some((a) => a.site === "Public Test"));
   const today = new Date().toISOString().slice(0, 10);
-  const current = await request(app).get(`/api/v1/public/activity?from=${today}&to=${today}`);
+  const current = await request(app).get(`/api/v1/public/activity?from=${today}&to=${today}`).set("Authorization", `Bearer ${token}`);
   assert.ok(current.body.data.some((a) => a.site === "Public Test"));
 });
 
 test("rejects a badly formatted date", async () => {
-  const res = await request(app).get("/api/v1/public/activity?from=yesterday");
+  const res = await request(app).get("/api/v1/public/activity?from=yesterday").set("Authorization", `Bearer ${token}`);
   assert.equal(res.status, 400);
 });
 
-test("anyone reads the flag log", async () => {
-  const res = await request(app).get("/api/v1/public/flags");
+test("a signed-in user reads the flag log", async () => {
+  const res = await request(app).get("/api/v1/public/flags").set("Authorization", `Bearer ${token}`);
   assert.ok(res.body.data.some((f) => f.category === "Queue order"));
 });
 
 test("public data never contains personal details", async () => {
   const paths = ["spaces", "activity", "flags"];
   for (const path of paths) {
-    const res = await request(app).get(`/api/v1/public/${path}`);
+    const res = await request(app).get(`/api/v1/public/${path}`).set("Authorization", `Bearer ${token}`);
     const text = JSON.stringify(res.body);
     assert.ok(!text.includes("Secret Vendor"));
     assert.ok(!text.includes(email));
@@ -87,14 +98,14 @@ test("public data never contains personal details", async () => {
 });
 
 test("the flag log shows an overdue open flag", async () => {
-  const res = await request(app).get("/api/v1/public/flags");
+  const res = await request(app).get("/api/v1/public/flags").set("Authorization", `Bearer ${token}`);
   const flag = res.body.data.find((f) => f.category === "Queue order");
   assert.equal(flag.overdue, true);
   assert.equal(flag.daysToAnswer, null);
 });
 
-test("anyone reads the accountability summary", async () => {
-  const res = await request(app).get("/api/v1/public/summary");
+test("a signed-in user reads the accountability summary", async () => {
+  const res = await request(app).get("/api/v1/public/summary").set("Authorization", `Bearer ${token}`);
   assert.equal(res.status, 200);
   assert.ok(res.body.data.allocations.total >= 1);
   assert.ok(res.body.data.allocations.outOfOrder >= 1);
@@ -103,23 +114,23 @@ test("anyone reads the accountability summary", async () => {
 });
 
 test("the summary never contains personal details", async () => {
-  const text = JSON.stringify((await request(app).get("/api/v1/public/summary")).body);
+  const text = JSON.stringify((await request(app).get("/api/v1/public/summary").set("Authorization", `Bearer ${token}`)).body);
   assert.ok(!text.includes("Secret Vendor") && !text.includes(email));
 });
 
 test("downloads a CSV", async () => {
-  const res = await request(app).get("/api/v1/public/spaces?format=csv");
+  const res = await request(app).get("/api/v1/public/spaces?format=csv").set("Authorization", `Bearer ${token}`);
   assert.equal(res.status, 200);
   assert.match(res.headers["content-type"], /text\/csv/);
   assert.match(res.text, /"reference"/);
 });
 
 test("downloads JSON when the format is asked for", async () => {
-  const res = await request(app).get("/api/v1/public/flags?format=json");
+  const res = await request(app).get("/api/v1/public/flags?format=json").set("Authorization", `Bearer ${token}`);
   assert.match(res.headers["content-disposition"], /flags\.json/);
 });
 
 test("rejects an unknown format", async () => {
-  const res = await request(app).get("/api/v1/public/spaces?format=xml");
+  const res = await request(app).get("/api/v1/public/spaces?format=xml").set("Authorization", `Bearer ${token}`);
   assert.equal(res.status, 400);
 });
