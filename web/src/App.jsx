@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout.jsx";
 import { PublicLayout } from "./components/PublicLayout.jsx";
 import { RequireRole } from "./components/RequireRole.jsx";
 import { ROLES } from "./lib/access.js";
+import { ApplyPage } from "./pages/ApplyPage.jsx";
 import { AdminPage } from "./pages/AdminPage.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
 import { RecordsPage } from "./pages/RecordsPage.jsx";
@@ -41,6 +42,7 @@ export function App() {
             <Route path="sites" element={<Suspense fallback={<p className="p-8 text-sm text-mute">Loading map…</p>}><SitesPage /></Suspense>} />
           </Route>
           <Route element={<RequireRole roles={[ROLES.VENDOR]} />}>
+            <Route path="sites/:id/apply" element={<ApplyPage />} />
             <Route path="vendor" element={<VendorPage />} />
             <Route path="flags" element={<MyFlagsPage />} />
             <Route path="profile" element={<ProfilePage />} />

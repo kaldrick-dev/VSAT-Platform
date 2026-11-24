@@ -61,6 +61,7 @@ export const api = {
   me: () => request("/auth/me"),
 
   listSites: (filters) => request("/sites", { query: filters }),
+  getSite: (id) => request(`/sites/${id}`),
   createSite: (data) => request("/sites", { method: "POST", body: data }),
   updateSite: (id, data) => request(`/sites/${id}`, { method: "PATCH", body: data }),
 
