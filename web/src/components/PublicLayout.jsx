@@ -7,8 +7,7 @@ import "../public.css";
 
 const LINKS = [
   { to: "/", label: "Home", end: true },
-  { to: "/#map", label: "Site map", plain: true },
-  { to: "/records", label: "Public records" }
+  { to: "/#map", label: "Site map", plain: true }
 ];
 
 export function Logo() {
@@ -57,20 +56,12 @@ function Footer() {
         <div className="pv-foot-grid">
           <div>
             <Logo />
-            <p>Vending space, allocated in the open. Every change on the public record.</p>
+            <p>Vending space, allocated in the open. Every change on the record.</p>
           </div>
           <div className="pv-foot-col">
             <b>Explore</b>
             <Link to="/">Home</Link>
             <Link to="/#map">Site map</Link>
-            <Link to="/records">Public records</Link>
-          </div>
-          <div className="pv-foot-col">
-            <b>Records</b>
-            <Link to="/records#spaces">Vending spaces</Link>
-            <Link to="/records#activity">Activity log</Link>
-            <Link to="/records#flags">Flag log</Link>
-            <Link to="/records#documents">Downloads</Link>
           </div>
           <div className="pv-foot-col">
             <b>Account</b>

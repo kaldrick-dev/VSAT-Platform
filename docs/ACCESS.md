@@ -4,7 +4,7 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 
 | Actor | Account | Lands on after sign-in | Can see |
 |---|---|---|---|
-| Public viewer | none | `/` (public records live here only) | Home, site map, public record (decisions, flag log) |
+| Public viewer | none | `/` | Home and the site map only. The allocation record needs a sign-in (web); the open-data API endpoints stay public |
 | Vendor | yes (`vendor`) | `/workspace` | Everything public, plus their own applications and queue positions |
 | Admin | yes (`admin`) | `/workspace` | Everything public, plus the full application queue and decision entry |
 
@@ -12,7 +12,9 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 
 | Route | Public | Vendor | Admin |
 |---|---|---|---|
-| `/`, `/records` (`/dashboard` redirects here) | yes | yes | yes |
+| `/` | yes | yes | yes |
+| `/records` (`/dashboard` redirects here) | sign in | yes | yes |
+| `/sites/:id/record` (one space's allocation record) | sign in | yes | yes |
 | `/#map` (home page section) | yes | yes | yes |
 | `/workspace` (overview), `/sites` (map), `/notifications`, `/help` | redirect to `/login` | yes | yes |
 | `/vendor` (my applications), `/flags` (my flags), `/profile` (profile & documents) | redirect to `/login` | yes | redirect to `/workspace` |

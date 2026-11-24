@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout.jsx";
 import { PublicLayout } from "./components/PublicLayout.jsx";
 import { RequireRole } from "./components/RequireRole.jsx";
 import { ROLES } from "./lib/access.js";
+import { SiteRecordPage } from "./pages/SiteRecordPage.jsx";
 import { ApplyPage } from "./pages/ApplyPage.jsx";
 import { AdminPage } from "./pages/AdminPage.jsx";
 import { HomePage } from "./pages/HomePage.jsx";
@@ -29,7 +30,9 @@ export function App() {
         {/* Public site: open to everyone */}
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="records" element={<RecordsPage />} />
+          <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ADMIN]} />}>
+            <Route path="records" element={<RecordsPage />} />
+          </Route>
           <Route path="dashboard" element={<Navigate to="/records" replace />} />
         </Route>
 
@@ -38,6 +41,7 @@ export function App() {
           <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ADMIN]} />}>
             <Route path="workspace" element={<WorkspacePage />} />
             <Route path="notifications" element={<NotificationsPage />} />
+            <Route path="sites/:id/record" element={<SiteRecordPage />} />
             <Route path="help" element={<HelpPage />} />
             <Route path="sites" element={<Suspense fallback={<p className="p-8 text-sm text-mute">Loading map…</p>}><SitesPage /></Suspense>} />
           </Route>
