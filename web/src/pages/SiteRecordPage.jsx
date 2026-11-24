@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Button, Card, Chip, EmptyState, Eyebrow, Page, PageHeader, StatusChip } from "../components/ui.jsx";
+import { Button, Card, Chip, EmptyState, Eyebrow, Page, PageHeader, PageSkeleton, StatusChip } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { shortId } from "../hooks/usePublicData.js";
 import { useApi } from "../hooks/useApi.js";
@@ -22,7 +22,7 @@ export function SiteRecordPage() {
   const { data, error } = useApi(load, null);
 
   if (error) return <Page><EmptyState title="Could not open this record">{error}</EmptyState></Page>;
-  if (!data) return <Page><p className="text-sm text-mute">Loading…</p></Page>;
+  if (!data) return <PageSkeleton />;
   const { site, entries, flags } = data;
 
   return (

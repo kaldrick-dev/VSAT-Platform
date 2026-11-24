@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { DownloadButtons, datasetMeta, latestDate } from "../components/DocumentActions.jsx";
 import { PvSelect } from "../components/PvSelect.jsx";
-import { Icon } from "../components/ui.jsx";
+import { Icon, Skeleton, SkeletonRows } from "../components/ui.jsx";
 import { DATASETS } from "../data/datasets.js";
 import { formatDate } from "../data/records.js";
 import { districts, formatRwf } from "../data/sites.js";
@@ -47,8 +47,8 @@ export function RecordsPage() {
         <div className="pv-wrap">
           <nav className="pv-crumbs" aria-label="Breadcrumb"><Link to="/">Home</Link> / <span aria-current="page">Public records</span></nav>
           <h1 className="pv-h1">Public records</h1>
-          <p className="lead">Which vending spaces are open, what they cost, and every change to their status. Open to everyone, no account needed. Information about individual vendors and applicants is never published.</p>
-          <span className="pv-stamp"><i />{loading ? "Loading records…" : error ? "Records unavailable" : `${openCount} spaces open now${lastUpdated ? ` · Updated ${formatDate(lastUpdated)}` : ""}`}</span>
+          <p className="lead">Which vending spaces are open, what they cost, and every change to their status. Available to every signed-in account. Information about individual vendors and applicants is never published.</p>
+          <span className="pv-stamp"><i />{loading ? <Skeleton className="h-3.5 w-40" dark /> : error ? "Records unavailable" : `${openCount} spaces open now${lastUpdated ? ` · Updated ${formatDate(lastUpdated)}` : ""}`}</span>
           <div className="pv-jump">
             <a href="#spaces" className="pv-btn pv-btn-glass pv-btn-sm">Available spaces</a>
             <a href="#activity" className="pv-btn pv-btn-glass pv-btn-sm">Activity log</a>
@@ -93,7 +93,7 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
-            {!filtered.length && <p className="pv-empty">{error || (loading ? "Loading…" : "No spaces match. Try a different search or clear the filters.")}</p>}
+            {!filtered.length && (loading && !error ? <SkeletonRows rows={4} /> : <p className="pv-empty">{error || "No spaces match. Try a different search or clear the filters."}</p>)}
           </div>
           <p className="pv-note">Showing {filtered.length} of {sites.length} spaces. <Link to="/#map" className="underline underline-offset-4">See them on the map</Link>.</p>
         </div>
@@ -164,7 +164,7 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
-            {!visibleLog.length && <p className="pv-empty">{error || (loading ? "Loading…" : statusLog.length ? "No entries in this date range." : "No allocations yet.")}</p>}
+            {!visibleLog.length && (loading && !error ? <SkeletonRows rows={3} dark /> : <p className="pv-empty">{error || (statusLog.length ? "No entries in this date range." : "No allocations yet.")}</p>)}
           </div>
         </div>
       </section>
@@ -196,7 +196,7 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
-            {!flags.length && <p className="pv-empty">No flags raised. Nothing has been questioned yet.</p>}
+            {!flags.length && (loading && !error ? <SkeletonRows rows={2} /> : <p className="pv-empty">No flags raised. Nothing has been questioned yet.</p>)}
           </div>
         </div>
       </section>

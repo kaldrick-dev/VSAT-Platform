@@ -17,7 +17,7 @@ export function AdminLogPage() {
   const [q, setQ] = useState("");
   const [outcome, setOutcome] = useState("all");
   const call = useCallback(() => api.listAllocations().then((res) => res.data.map(toRow)), []);
-  const { data: decisionLog, error } = useApi(call, []);
+  const { data: decisionLog, loading, error } = useApi(call, []);
   const rows = useMemo(() => {
     const term = q.trim().toLowerCase();
     return decisionLog.filter((d) => (outcome === "all" || d.outcome === outcome) && (!term || [d.id, d.site, d.application, d.reason].some((t) => t.toLowerCase().includes(term))));
@@ -58,7 +58,7 @@ export function AdminLogPage() {
             </tbody>
           </table>
           {error && <p role="alert" className="px-5 py-3 text-[13px] text-red-600">{error}</p>}
-          {!rows.length && <EmptyState title="No decisions match">Try a different search or filter.</EmptyState>}
+          {!rows.length && <EmptyState loading={loading} title="No decisions match">Try a different search or filter.</EmptyState>}
         </div>
       </Card>
     </Page>

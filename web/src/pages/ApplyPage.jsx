@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Button, Card, Chip, Dropdown, EmptyState, Eyebrow, Field, Icon, Page, PageHeader, StatusChip, fieldClass } from "../components/ui.jsx";
+import { Button, Card, Chip, Dropdown, EmptyState, Eyebrow, Field, Icon, Page, PageHeader, PageSkeleton, StatusChip, fieldClass } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { TRADES } from "../data/workspace.js";
 import { useApi } from "../hooks/useApi.js";
@@ -122,10 +122,10 @@ function ApplicationForm({ site, profile, documents, onSubmitted }) {
           </label>
           {error && <p role="alert" className="text-[13px] text-red-600">{error}</p>}
           <div className="flex flex-wrap items-center gap-3">
-            <Button type="submit" size="lg" disabled={busy || !agreed || form.use.trim().length < 20}>
+            <Button type="submit" size="sm" disabled={busy || !agreed || form.use.trim().length < 20}>
               {busy ? "Submitting…" : "Submit application"}<Icon name="arrow" className="size-4" />
             </Button>
-            <Button variant="secondary" size="lg" to="/sites">Cancel</Button>
+            <Button variant="secondary" size="sm" to="/sites">Cancel</Button>
           </div>
         </section>
       </form>
@@ -142,7 +142,7 @@ export function ApplyPage() {
   const { data, error } = useApi(load, null);
 
   if (error) return <Page><EmptyState title="Could not open this application">{error}</EmptyState></Page>;
-  if (!data) return <Page><p className="text-sm text-mute">Loading…</p></Page>;
+  if (!data) return <PageSkeleton />;
 
   const { site, existing, profile, documents } = data;
   const body = position !== null

@@ -50,7 +50,7 @@ function DetailsCard() {
 
 function DocumentsCard() {
   const call = useCallback(() => api.myDocuments().then((res) => res.data), []);
-  const { data: docs, reload } = useApi(call, []);
+  const { data: docs, loading, reload } = useApi(call, []);
   const [form, setForm] = useState({ name: "", kind: KINDS[0], url: "" });
   const [error, setError] = useState("");
 
@@ -85,7 +85,7 @@ function DocumentsCard() {
           </li>
         ))}
       </ul>
-      {!docs.length && <EmptyState title="No documents yet">Add your ID and trading licence so reviews are quick.</EmptyState>}
+      {!docs.length && <EmptyState loading={loading} title="No documents yet">Add your ID and trading licence so reviews are quick.</EmptyState>}
 
       <form className="mt-4 grid gap-3 border-t border-line pt-4" onSubmit={add}>
         <Field label="Document name"><input className={fieldClass} required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Trading licence 2026" /></Field>

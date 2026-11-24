@@ -143,7 +143,7 @@ export function AdminPage() {
     api.listAllocations(),
     api.listFlags({ status: "open" })
   ]).then(([applications, sites, allocations, flags]) => ({ queue: applications.data, sites: sites.data, decisions: allocations.data, flags: flags.data })), []);
-  const { data, error, reload } = useApi(call, { queue: [], sites: [], decisions: [], flags: [] });
+  const { data, loading, error, reload } = useApi(call, { queue: [], sites: [], decisions: [], flags: [] });
   const { queue } = data;
   const [openId, setOpenId] = useState(null);
 
@@ -163,6 +163,7 @@ export function AdminPage() {
       />
 
       <StatStrip
+        loading={loading}
         items={[
           { label: "Pending applications", value: queue.length },
           { label: "Published sites", value: data.sites.length },
@@ -192,7 +193,7 @@ export function AdminPage() {
           </div>
         </section>
       ))}
-      {!queue.length && <EmptyState title="The queue is empty">No applications are waiting for a decision.</EmptyState>}
+      {!queue.length && <EmptyState loading={loading} title="The queue is empty">No applications are waiting for a decision.</EmptyState>}
     </Page>
   );
 }

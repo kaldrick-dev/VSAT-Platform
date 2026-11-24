@@ -271,15 +271,15 @@ export function PageHeader({ title, description, actions }) {
 const DELTA_TONE = { up: "text-good", down: "text-bad", flat: "text-faint" };
 
 /** Metrics on an open row separated by hairlines — no enclosing box. */
-export function StatStrip({ items, className = "" }) {
+export function StatStrip({ items, loading = false, className = "" }) {
   return (
     <div className={`grid sm:grid-flow-col sm:auto-cols-fr max-sm:grid-cols-2 ${className}`}>
       {items.map(({ label, value, delta, tone = "flat" }) => (
         <div key={label} className="px-5 py-5 first:pl-0">
           <p className="text-[12.5px] text-mute">{label}</p>
           <p className="mt-1 flex items-baseline gap-2">
-            <span className="text-[30px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</span>
-            {delta && <span className={`text-xs font-medium tabular-nums ${DELTA_TONE[tone]}`}>{delta}</span>}
+            {loading ? <Skeleton className="h-[30px] w-12" /> : <span className="text-[30px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</span>}
+            {!loading && delta && <span className={`text-xs font-medium tabular-nums ${DELTA_TONE[tone]}`}>{delta}</span>}
           </p>
         </div>
       ))}
@@ -317,7 +317,61 @@ export function Page({ children, className = "" }) {
   return <div className={`mx-auto grid w-full max-w-[1180px] gap-7 px-4 pb-10 pt-6 sm:px-6 ${className}`}>{children}</div>;
 }
 
-export function EmptyState({ title, children }) {
+/** Grey placeholder block that pulses while data loads. Decorative: screen readers get the status text in SkeletonRows. */
+export function Skeleton({ className = "", dark = false }) {
+  return <span aria-hidden="true" className={`block rounded-md motion-safe:animate-pulse ${dark ? "bg-white/10" : "bg-ink/[0.07]"} ${className}`} />;
+}
+
+/** Placeholder list rows (icon, two lines, a chip) shown in place of a list while it loads. */
+export function SkeletonRows({ rows = 3, dark = false, className = "" }) {
+  return (
+    <div role="status" aria-busy="true" className={`grid ${className}`}>
+      <span className="sr-only">Loading</span>
+      {Array.from({ length: rows }, (_, i) => (
+        <div key={i} className="flex items-center gap-3 px-4 py-3.5">
+          <Skeleton dark={dark} className="size-10 shrink-0 rounded-xl" />
+          <div className="grid flex-1 gap-2">
+            <Skeleton dark={dark} className="h-3.5 w-2/5" />
+            <Skeleton dark={dark} className="h-3 w-3/5" />
+          </div>
+          <Skeleton dark={dark} className="hidden h-6 w-16 sm:block" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Full-page placeholder: a title, a line of text and two blocks. */
+export function PageSkeleton() {
+  return (
+    <Page>
+      <div role="status" aria-busy="true" className="grid gap-3">
+        <span className="sr-only">Loading</span>
+        <Skeleton className="h-9 w-64" />
+        <Skeleton className="h-4 w-96 max-w-full" />
+      </div>
+      <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
+        <Skeleton className="h-72 rounded-2xl" />
+        <Skeleton className="h-72 rounded-2xl" />
+      </div>
+    </Page>
+  );
+}
+
+/** Map-shaped placeholder: a pulsing field with a filter bar and a results panel. */
+export function MapSkeleton({ className = "" }) {
+  return (
+    <div role="status" aria-busy="true" className={`relative overflow-hidden bg-sunken ${className}`}>
+      <span className="sr-only">Loading map</span>
+      <Skeleton className="absolute inset-0 rounded-none" />
+      <Skeleton className="absolute left-3 top-3 h-9 w-64 rounded-full bg-surface/80" />
+      <Skeleton className="absolute bottom-3 left-3 top-[64px] hidden w-[340px] rounded-[22px] bg-surface/80 sm:block" />
+    </div>
+  );
+}
+
+export function EmptyState({ title, children, loading = false }) {
+  if (loading) return <SkeletonRows rows={3} />;
   return (
     <div className="grid gap-1 px-6 py-14 text-center">
       <strong className="text-sm font-medium">{title}</strong>

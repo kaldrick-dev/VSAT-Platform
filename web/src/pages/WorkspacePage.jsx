@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Button, Chip, Eyebrow, Icon, Page, PageHeader, Ring } from "../components/ui.jsx";
+import { Button, Chip, Eyebrow, Icon, Page, PageHeader, Ring, Skeleton, SkeletonRows } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { useSites } from "../hooks/useSites.js";
 import { useApi } from "../hooks/useApi.js";
@@ -13,13 +13,15 @@ import { ROLES } from "../lib/access.js";
 const TONE = { up: "text-good", down: "text-bad", flat: "text-faint" };
 
 /** Soft tinted card: no border, no shadow. The page is white, so the tint does the separating. */
-function Tile({ label, value, delta, tone = "flat", highlight = false }) {
+function Tile({ label, value, delta, tone = "flat", highlight = false, loading = false }) {
   return (
     <div className={`p-5`}>
       <p className={`text-[13px] ${highlight ? "text-accent" : "text-mute"}`}>{label}</p>
       <p className="mt-2 flex items-baseline gap-2">
-        <span className={`text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums ${highlight ? "text-accent" : ""}`}>{value}</span>
-        {delta && <span className={`text-xs font-medium ${TONE[tone]}`}>{delta}</span>}
+        {loading
+          ? <Skeleton className="h-[34px] w-14" />
+          : <span className={`text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums ${highlight ? "text-accent" : ""}`}>{value}</span>}
+        {!loading && delta && <span className={`text-xs font-medium ${TONE[tone]}`}>{delta}</span>}
       </p>
     </div>
   );
@@ -59,7 +61,7 @@ function Row({ to, primary, secondary, end }) {
 const Go = () => <Icon name="arrow" className="size-4 text-faint" />;
 
 function RecentUpdates({ role }) {
-  const { items } = useNotifications();
+  const { items, loading } = useNotifications();
   return (
     <Panel title="Recent updates" action={<Button variant="ghost" size="sm" to="/notifications">View all</Button>}>
       {items.slice(0, 3).map((n) => (
@@ -67,13 +69,13 @@ function RecentUpdates({ role }) {
           primary={<>{!n.read && <span className="mr-2 inline-block size-1.5 rounded-full bg-accent align-middle" />}{n.title}</>}
           secondary={n.time} end={<Go />} />
       ))}
-      {!items.length && <p className="px-3.5 py-3 text-[13px] text-mute">Nothing new.</p>}
+      {!items.length && (loading ? <SkeletonRows rows={2} /> : <p className="px-3.5 py-3 text-[13px] text-mute">Nothing new.</p>)}
     </Panel>
   );
 }
 
 function OpenSpaces({ title }) {
-  const { sites } = useSites();
+  const { sites, loading } = useSites();
   const OPEN = sites.filter((site) => site.status === "available");
   return (
     <Panel title={title} description={OPEN.length === 1 ? "1 space is accepting applications." : `${OPEN.length} spaces are accepting applications.`} action={<Button variant="ghost" size="sm" to="/sites">Open map</Button>}>
@@ -104,7 +106,7 @@ function OpenSpaces({ title }) {
             ))}
           </tbody>
         </table>
-        {!OPEN.length && <p className="px-4 py-3 text-[13px] text-mute">No spaces are open right now.</p>}
+        {!OPEN.length && (loading ? <SkeletonRows rows={2} /> : <p className="px-4 py-3 text-[13px] text-mute">No spaces are open right now.</p>)}
       </div>
     </Panel>
   );
@@ -119,10 +121,10 @@ function QuickActions({ items }) {
 }
 
 function VendorOverview({ name }) {
-  const { sites } = useSites();
+  const { sites, loading: loadingSites } = useSites();
   const OPEN = sites.filter((site) => site.status === "available");
-  const { data: applications } = useApi(useCallback(() => api.myApplications().then((res) => res.data), []), []);
-  const { data: flags } = useApi(useCallback(() => api.myFlags().then((res) => res.data), []), []);
+  const { data: applications, loading: loadingApplications } = useApi(useCallback(() => api.myApplications().then((res) => res.data), []), []);
+  const { data: flags, loading: loadingFlags } = useApi(useCallback(() => api.myFlags().then((res) => res.data), []), []);
   const pending = applications.filter((a) => a.status === "pending");
   const application = pending[0];
   const openFlags = flags.filter((f) => f.status === "open").length;
@@ -131,10 +133,10 @@ function VendorOverview({ name }) {
       <PageHeader title={`Welcome, ${name}`} description="Your applications, your place in each queue and the spaces open right now." actions={<Button to="/sites">Browse sites<Icon name="arrow" className="size-4" /></Button>} />
 
       <Tiles>
-        <Tile label="Active applications" value={pending.length} />
-        <Tile label="Queue position" value={application ? `#${application.queuePosition}` : "-"} delta={application ? application.site.name : "no pending application"} highlight />
-        <Tile label="Open spaces" value={OPEN.length} delta="to apply for" tone="up" />
-        <Tile label="My flags open" value={openFlags} delta={openFlags ? "awaiting review" : "-"} />
+        <Tile loading={loadingApplications} label="Active applications" value={pending.length} />
+        <Tile loading={loadingApplications} label="Queue position" value={application ? `#${application.queuePosition}` : "-"} delta={application ? application.site.name : "no pending application"} highlight />
+        <Tile loading={loadingSites} label="Open spaces" value={OPEN.length} delta="to apply for" tone="up" />
+        <Tile loading={loadingFlags} label="My flags open" value={openFlags} delta={openFlags ? "awaiting review" : "-"} />
       </Tiles>
 
       <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
@@ -154,6 +156,8 @@ function VendorOverview({ name }) {
                   <p className="text-[13px] text-mute">{application.site.district} · applied {formatDateTime(application.appliedAt)}</p>
                 </div>
               </div>
+            ) : loadingApplications ? (
+              <SkeletonRows rows={1} />
             ) : (
               <p className="rounded-xl bg-surface p-4 text-[13px] text-mute">You have no pending application. Open the map to apply for a space.</p>
             )}
@@ -175,10 +179,10 @@ function VendorOverview({ name }) {
 }
 
 function AdminOverview({ name }) {
-  const { sites } = useSites();
+  const { sites, loading: loadingSites } = useSites();
   const call = useCallback(() => Promise.all([api.listApplications({ status: "pending" }), api.listFlags({ status: "open" })])
     .then(([applications, flags]) => ({ queue: applications.data, openFlags: flags.data })), []);
-  const { data: { queue, openFlags } } = useApi(call, { queue: [], openFlags: [] });
+  const { data: { queue, openFlags }, loading } = useApi(call, { queue: [], openFlags: [] });
   const counts = { available: 0, allocated: 0, inactive: 0 };
   sites.forEach((s) => { counts[s.status] += 1; });
   const noDocs = queue.filter((a) => !a.vendor._count.documents).length;
@@ -187,10 +191,10 @@ function AdminOverview({ name }) {
       <PageHeader title={`Welcome, ${name}`} description="What needs your attention: the oldest applications, open flags and the state of every listed space." actions={<Button to="/admin">Review queue<Icon name="arrow" className="size-4" /></Button>} />
 
       <Tiles>
-        <Tile label="Pending applications" value={queue.length} delta={noDocs ? `${noDocs} without documents` : undefined} tone="down" />
-        <Tile label="Open spaces" value={counts.available} delta={`of ${sites.length} listed`} tone="up" />
-        <Tile label="Allocated" value={counts.allocated} />
-        <Tile label="Flags awaiting review" value={openFlags.length} tone={openFlags.length ? "down" : "flat"} />
+        <Tile loading={loading} label="Pending applications" value={queue.length} delta={noDocs ? `${noDocs} without documents` : undefined} tone="down" />
+        <Tile loading={loadingSites} label="Open spaces" value={counts.available} delta={`of ${sites.length} listed`} tone="up" />
+        <Tile loading={loadingSites} label="Allocated" value={counts.allocated} />
+        <Tile loading={loading} label="Flags awaiting review" value={openFlags.length} tone={openFlags.length ? "down" : "flat"} />
       </Tiles>
 
       <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
@@ -202,7 +206,7 @@ function AdminOverview({ name }) {
                 secondary={`${a.vendor.trade ?? "Trade not given"} · ${formatDateTime(a.appliedAt)}`}
                 end={<Chip tone={a.vendor._count.documents ? "good" : "bad"}>{a.vendor._count.documents ? "Documents" : "No documents"}</Chip>} />
             ))}
-            {!queue.length && <p className="px-3.5 py-3 text-[13px] text-mute">No applications are waiting.</p>}
+            {!queue.length && (loading ? <SkeletonRows rows={2} /> : <p className="px-3.5 py-3 text-[13px] text-mute">No applications are waiting.</p>)}
           </Panel>
           <RecentUpdates role="admin" />
         </div>
