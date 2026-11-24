@@ -50,6 +50,7 @@ test("anyone reads the activity log", async () => {
 test("the activity log shows queue context without reasons", async () => {
   const res = await request(app).get("/api/v1/public/activity");
   const entry = res.body.data.find((a) => a.site === "Public Test");
+  assert.equal(entry.reference, "PUB-TEST");
   assert.equal(entry.queuePosition, 3);
   assert.equal(entry.waitingCount, 5);
   assert.equal(entry.outOfOrder, true);

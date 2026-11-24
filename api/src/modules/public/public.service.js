@@ -27,13 +27,14 @@ export const dateRange = ({ from, to }) => ({
 export const listActivity = async (filters = {}) => {
   const allocations = await prisma.allocation.findMany({
     where: { outcome: { in: ["approved", "revoked"] }, decidedAt: dateRange(filters) },
-    include: { site: { select: { name: true, district: true } } },
+    include: { site: { select: { name: true, district: true, reference: true } } },
     orderBy: { decidedAt: "desc" }
   });
   return allocations.map((a) => ({
     id: a.id,
     date: a.decidedAt.toISOString().slice(0, 10),
     site: a.site.name,
+    reference: a.site.reference,
     district: a.site.district,
     event: a.outcome === "approved" ? "Allocated" : "Revoked",
     queuePosition: a.queuePosition || null,

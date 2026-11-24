@@ -2,7 +2,7 @@
 
 A public, auditable record of vending-site applications and allocation outcomes.
 
-- **Public visitors** browse open spaces on a map, read the public records and download them as CSV or JSON. No account needed, and no personal data is ever shown.
+- **Visitors** browse open spaces on a map without an account. The allocation records, flag log and CSV/JSON downloads are inside the signed-in workspace, and no personal data is ever shown in them.
 - **Vendors** register, apply for spaces, follow their queue position, flag allocations and manage their profile and documents.
 - **Administrators** publish sites, review the queue in timestamp order, record decisions with a stated reason and review flags.
 

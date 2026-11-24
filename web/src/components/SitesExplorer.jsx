@@ -88,8 +88,8 @@ function SiteDetail({ site, onClose, onApply }) {
             Apply · {site.queue} ahead
           </Button>
         ) : (
-          <Button size="lg" to="/records">
-            View public record
+          <Button size="lg" to={`/sites/${site.id}/record`}>
+            View allocation record
             <Icon name="arrow" className="size-4" />
           </Button>
         )}
