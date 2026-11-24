@@ -66,8 +66,8 @@ npm run dev
 | What | Address |
 |---|---|
 | Web app | http://localhost:5173 |
-| API | http://localhost:4000/api/v1 |
-| API health check | http://localhost:4000/api/v1/health |
+| API | http://localhost:4001/api/v1 |
+| API health check | http://localhost:4001/api/v1/health |
 
 The web app forwards `/api` requests to the API, so you only open the web address.
 
@@ -120,7 +120,7 @@ This runs the API tests (they need the Docker database from step 3 running) and 
 | `DATABASE_URL` | `postgresql://vsat:vsat@localhost:5433/vsat` | PostgreSQL connection string |
 | `JWT_SECRET` | development value | At least 32 characters. **Required in production** |
 | `JWT_EXPIRES_IN` | `1h` | How long a sign-in lasts |
-| `PORT` | `4000` | API port |
+| `PORT` | `4001` | API port |
 | `CORS_ORIGIN` | `http://localhost:5173` | Allowed web origins, comma separated |
 
 `web/.env`
@@ -135,7 +135,7 @@ The map uses the free OpenFreeMap style, so no map key is needed.
 
 - **`Can't reach database server` or sign-in fails:** check `docker compose ps` shows the database as healthy, and that `DATABASE_URL` in `api/.env` uses port `5433`.
 - **`Environment variable not found: DATABASE_URL`:** you have not created `api/.env`. Run step 2.
-- **Port already in use:** stop whatever uses 4000 or 5173, or change `PORT` in `api/.env`.
+- **Port already in use:** stop whatever uses 4001 or 5173, or change `PORT` in `api/.env`.
 - **Tests fail with a missing table or column:** run `npm run test:setup -w @vsat/api` again after pulling new migrations (and the `createdb` command if you never ran it).
 - **Sign-in worked, then everything shows "Authentication required":** the token lasts one hour. Sign in again.
 
