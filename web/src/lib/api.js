@@ -1,5 +1,5 @@
 // Thin client for the VSAT REST API (see api/src/routes/index.js).
-// Base URL comes from VITE_API_BASE_URL (default: /api/v1, proxied to :4000 by Vite).
+// Base URL comes from VITE_API_BASE_URL (default: /api/v1, proxied to :4001 by Vite).
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 const TOKEN_KEY = "vsat.token";
