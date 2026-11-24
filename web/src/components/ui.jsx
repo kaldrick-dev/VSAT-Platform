@@ -273,12 +273,12 @@ const DELTA_TONE = { up: "text-good", down: "text-bad", flat: "text-faint" };
 /** Metrics on an open row separated by hairlines — no enclosing box. */
 export function StatStrip({ items, loading = false, className = "" }) {
   return (
-    <div className={`grid sm:grid-flow-col sm:auto-cols-fr max-sm:grid-cols-2 ${className}`}>
+    <div className={`grid sm:grid-flow-col sm:auto-cols-fr max-sm:grid-cols-2 max-sm:gap-3 ${className}`}>
       {items.map(({ label, value, delta, tone = "flat" }) => (
-        <div key={label} className="px-5 py-5 max-sm:px-0 max-sm:py-3.5 sm:first:pl-0">
-          <p className="text-[12.5px] text-mute">{label}</p>
+        <div key={label} className="px-5 py-5 sm:first:pl-0">
+          <p className="text-[12.5px] text-mute max-sm:text-[13px]">{label}</p>
           <p className="mt-1 flex items-baseline gap-2">
-            {loading ? <Skeleton className="h-[30px] w-12" /> : <span className="text-[30px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</span>}
+            {loading ? <Skeleton className="h-[30px] w-12" /> : <span className="text-[30px] font-semibold leading-none tracking-[-0.03em] tabular-nums max-sm:text-[34px]">{value}</span>}
             {!loading && delta && <span className={`text-xs font-medium tabular-nums ${DELTA_TONE[tone]}`}>{delta}</span>}
           </p>
         </div>
