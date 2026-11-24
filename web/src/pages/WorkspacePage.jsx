@@ -80,14 +80,14 @@ function OpenSpaces({ title }) {
   return (
     <Panel title={title} description={OPEN.length === 1 ? "1 space is accepting applications." : `${OPEN.length} spaces are accepting applications.`} action={<Button variant="ghost" size="sm" to="/sites">Open map</Button>}>
       <div className="overflow-x-auto rounded-xl bg-surface">
-        <table className="w-full min-w-[360px] border-collapse text-left">
+        <table className="w-full border-collapse text-left">
           <caption className="sr-only">Vending spaces open for applications</caption>
           <thead>
             <tr className="border-b border-line">
               <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">Space</Eyebrow></th>
               <th scope="col" className="hidden px-4 py-2.5 2xl:table-cell"><Eyebrow className="text-mute">Location</Eyebrow></th>
               <th scope="col" className="hidden whitespace-nowrap px-4 py-2.5 sm:table-cell"><Eyebrow className="text-mute">Size</Eyebrow></th>
-              <th scope="col" className="whitespace-nowrap px-4 py-2.5 text-right"><Eyebrow className="text-mute">Fee / month</Eyebrow></th>
+              <th scope="col" className="hidden whitespace-nowrap px-4 py-2.5 text-right sm:table-cell"><Eyebrow className="text-mute">Fee / month</Eyebrow></th>
               <th scope="col" className="px-4 py-2.5"><span className="sr-only">Action</span></th>
             </tr>
           </thead>
@@ -96,11 +96,11 @@ function OpenSpaces({ title }) {
               <tr key={site.id} className="border-b border-line last:border-b-0 transition hover:bg-sunken/60">
                 <th scope="row" className="px-4 py-3 text-left font-normal">
                   <span className="block text-[13.5px] font-medium">{site.name}</span>
-                  <span className="mt-0.5 block text-xs text-mute">{site.reference}<span className="2xl:hidden"> · {site.sector}, {site.district}</span></span>
+                  <span className="mt-0.5 block text-xs text-mute">{site.reference}<span className="2xl:hidden"> · {site.sector}, {site.district}</span><span className="block font-medium text-ink sm:hidden">{formatRwf(site.fee)} / month</span></span>
                 </th>
                 <td className="hidden px-4 py-3 text-[13px] text-mute 2xl:table-cell">{site.sector}, {site.district}</td>
                 <td className="hidden whitespace-nowrap px-4 py-3 text-[13px] text-mute sm:table-cell">{site.size}</td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-[13px] font-medium tabular-nums">{formatRwf(site.fee)}</td>
+                <td className="hidden whitespace-nowrap px-4 py-3 text-right text-[13px] font-medium tabular-nums sm:table-cell">{formatRwf(site.fee)}</td>
                 <td className="px-4 py-3 text-right"><Button variant="secondary" size="sm" to={`/sites/${site.id}/apply`}>Apply</Button></td>
               </tr>
             ))}
@@ -201,14 +201,14 @@ function AdminOverview({ name }) {
         <div className="grid gap-4">
           <Panel title="Oldest pending applications" description="Positions are fixed by submission time." action={<Button variant="ghost" size="sm" to="/admin">Open queue</Button>}>
             <div className="overflow-x-auto rounded-xl bg-surface">
-              <table className="w-full min-w-[420px] border-collapse text-left">
+              <table className="w-full border-collapse text-left">
                 <caption className="sr-only">Oldest pending applications</caption>
                 <thead>
                   <tr className="border-b border-line">
                     <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">#</Eyebrow></th>
                     <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">Space</Eyebrow></th>
                     <th scope="col" className="hidden whitespace-nowrap px-4 py-2.5 2xl:table-cell"><Eyebrow className="text-mute">Applied</Eyebrow></th>
-                    <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">Documents</Eyebrow></th>
+                    <th scope="col" className="hidden px-4 py-2.5 sm:table-cell"><Eyebrow className="text-mute">Documents</Eyebrow></th>
                     <th scope="col" className="px-4 py-2.5"><span className="sr-only">Action</span></th>
                   </tr>
                 </thead>
@@ -218,10 +218,10 @@ function AdminOverview({ name }) {
                       <td className="px-4 py-3"><span className="grid size-7 place-items-center rounded-lg bg-sunken font-mono text-[12px] font-medium" title="Position in this site's queue">{a.queuePosition}</span></td>
                       <th scope="row" className="px-4 py-3 text-left font-normal">
                         <span className="block text-[13.5px] font-medium">{a.site.name}</span>
-                        <span className="mt-0.5 block text-xs text-mute">{a.vendor.fullName}<span className="2xl:hidden"> · {formatDateTime(a.appliedAt)}</span></span>
+                        <span className="mt-0.5 block text-xs text-mute">{a.vendor.fullName}<span className="2xl:hidden"> · {formatDateTime(a.appliedAt)}</span><span className={`block font-medium sm:hidden ${a.vendor._count.documents ? "text-good" : "text-bad"}`}>{a.vendor._count.documents ? "Documents attached" : "No documents"}</span></span>
                       </th>
                       <td className="hidden whitespace-nowrap px-4 py-3 text-[13px] text-mute 2xl:table-cell">{formatDateTime(a.appliedAt)}</td>
-                      <td className="whitespace-nowrap px-4 py-3"><Chip tone={a.vendor._count.documents ? "good" : "bad"}>{a.vendor._count.documents ? "Attached" : "None"}</Chip></td>
+                      <td className="hidden whitespace-nowrap px-4 py-3 sm:table-cell"><Chip tone={a.vendor._count.documents ? "good" : "bad"}>{a.vendor._count.documents ? "Attached" : "None"}</Chip></td>
                       <td className="px-4 py-3 text-right"><Button variant="secondary" size="sm" to="/admin">Review</Button></td>
                     </tr>
                   ))}

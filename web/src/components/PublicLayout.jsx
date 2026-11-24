@@ -84,13 +84,16 @@ export function PublicLayout() {
   const { pathname, hash } = useLocation();
 
   useEffect(() => {
-    const items = document.querySelectorAll(".pv-rv");
-    if (!("IntersectionObserver" in window)) return items.forEach((el) => el.classList.add("is-in"));
+    if (!("IntersectionObserver" in window)) return document.querySelectorAll(".pv-rv").forEach((el) => el.classList.add("is-in"));
     const io = new IntersectionObserver((entries) => {
       for (const entry of entries) if (entry.isIntersecting) { entry.target.classList.add("is-in"); io.unobserve(entry.target); }
     }, { threshold: 0.12 });
-    items.forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    // Sections that appear after their data loads (like the accountability summary) must be watched too.
+    const watch = () => document.querySelectorAll(".pv-rv:not(.is-in)").forEach((el) => io.observe(el));
+    watch();
+    const mo = new MutationObserver(watch);
+    mo.observe(document.body, { childList: true, subtree: true });
+    return () => { io.disconnect(); mo.disconnect(); };
   }, [pathname]);
 
   useEffect(() => {

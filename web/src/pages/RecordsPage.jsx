@@ -48,7 +48,7 @@ export function RecordsPage() {
           <nav className="pv-crumbs" aria-label="Breadcrumb"><Link to="/">Home</Link> / <span aria-current="page">Public records</span></nav>
           <h1 className="pv-h1">Public records</h1>
           <p className="lead">Which vending spaces are open, what they cost, and every change to their status. Available to every signed-in account. Information about individual vendors and applicants is never published.</p>
-          <span className="pv-stamp"><i />{loading ? <Skeleton className="h-3.5 w-40" dark /> : error ? "Records unavailable" : `${openCount} spaces open now${lastUpdated ? ` · Updated ${formatDate(lastUpdated)}` : ""}`}</span>
+          <span className="pv-stamp"><i />{loading ? <Skeleton className="h-3.5 w-40" dark /> : error ? "Records unavailable" : `${openCount} ${openCount === 1 ? "space" : "spaces"} open now${lastUpdated ? ` · Updated ${formatDate(lastUpdated)}` : ""}`}</span>
           <div className="pv-jump">
             <a href="#spaces" className="pv-btn pv-btn-glass pv-btn-sm">Available spaces</a>
             <a href="#activity" className="pv-btn pv-btn-glass pv-btn-sm">Activity log</a>
@@ -93,6 +93,18 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
+            <ul className="pv-cards">
+              {filtered.map((s) => (
+                <li key={s.id}>
+                  <div className="pv-card-top">
+                    <div><b className="pv-card-title">{s.name}</b><div className="pv-card-ref">{s.reference} · {s.sector}, {s.district}</div></div>
+                    <span className={`pv-pill ${STATUS[s.status][0]}`}>{STATUS[s.status][1]}</span>
+                  </div>
+                  <div className="pv-card-row"><b>{formatRwf(s.fee)} / month</b><span>{s.size}</span><span>{s.type}</span></div>
+                  <p className="pv-card-meta">{s.terms}</p>
+                </li>
+              ))}
+            </ul>
             {!filtered.length && (loading && !error ? <SkeletonRows rows={4} /> : <p className="pv-empty">{error || "No spaces match. Try a different search or clear the filters."}</p>)}
           </div>
           <p className="pv-note">Showing {filtered.length} of {sites.length} spaces. <Link to="/#map" className="underline underline-offset-4">See them on the map</Link>.</p>
@@ -109,7 +121,7 @@ export function RecordsPage() {
               </div>
               <p className="pv-muted">Flags should be answered within 7 days. These figures count every flag raised and every allocation recorded.</p>
             </div>
-            <dl className="pv-rv" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 24 }}>
+            <dl className="pv-rv" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 24 }}>
               {[
                 ["Spaces allocated", summary.allocations.total],
                 ["Allocated out of queue order", summary.allocations.outOfOrder],
@@ -118,7 +130,7 @@ export function RecordsPage() {
                 ["Flags overdue", summary.flags.overdue],
                 ["Average days to answer", summary.flags.averageDaysToAnswer ?? "n/a"]
               ].map(([label, value]) => (
-                <div key={label}><dd style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>{value}</dd><dt className="pv-muted" style={{ marginTop: 8 }}>{label}</dt></div>
+                <div key={label}><dd style={{ fontSize: 36, fontWeight: 600, lineHeight: 1 }}>{value}</dd><dt className="pv-muted" style={{ marginTop: 8 }}>{label}</dt></div>
               ))}
             </dl>
             {!!summary.allocations.byDistrict.length && (
@@ -164,6 +176,22 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
+            <ul className="pv-cards">
+              {visibleLog.map((e) => (
+                <li key={e.id}>
+                  <div className="pv-card-top">
+                    <div><b className="pv-card-title">{e.site}</b><div className="pv-card-ref">{shortId("EV", e.id)} · {e.district}</div></div>
+                    <span className={`pv-pill ${EVENT_TONE[e.event]}`}>{e.event}</span>
+                  </div>
+                  <div className="pv-card-row">
+                    <span>{formatDate(e.date)}</span>
+                    <span>Queue: {e.queuePosition ? `${e.queuePosition} of ${e.waitingCount}` : "n/a"}</span>
+                    <span>Basis: {e.reasonCategory}</span>
+                  </div>
+                  {e.outOfOrder && <div className="pv-card-row"><span className="pv-pill bad">Out of queue order</span></div>}
+                </li>
+              ))}
+            </ul>
             {!visibleLog.length && (loading && !error ? <SkeletonRows rows={3} dark /> : <p className="pv-empty">{error || (statusLog.length ? "No entries in this date range." : "No allocations yet.")}</p>)}
           </div>
         </div>
@@ -196,6 +224,22 @@ export function RecordsPage() {
                 ))}
               </tbody>
             </table>
+            <ul className="pv-cards">
+              {flags.map((f) => (
+                <li key={f.id}>
+                  <div className="pv-card-top">
+                    <div><b className="pv-card-title">{f.category}</b><div className="pv-card-ref">{shortId("FL", f.id)} · entry {shortId("EV", f.allocationId)}</div></div>
+                    <span className={`pv-pill ${FLAG_TONE[f.status]}`}>{FLAG_LABEL[f.status]}</span>
+                  </div>
+                  <div className="pv-card-row">
+                    <span>Raised {formatDate(f.date)}</span>
+                    <span>Due {formatDate(f.dueDate)}</span>
+                    <span>{f.daysToAnswer === null ? "Waiting for an answer" : `Answered in ${f.daysToAnswer} days`}</span>
+                  </div>
+                  {f.overdue && <div className="pv-card-row"><span className="pv-pill bad">Overdue</span></div>}
+                </li>
+              ))}
+            </ul>
             {!flags.length && (loading && !error ? <SkeletonRows rows={2} /> : <p className="pv-empty">No flags raised. Nothing has been questioned yet.</p>)}
           </div>
         </div>

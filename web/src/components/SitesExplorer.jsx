@@ -159,6 +159,7 @@ export default function SitesExplorer({ query = "", fill = false }) {
         ? "relative h-full min-h-[520px] overflow-hidden"
         : "relative h-[720px] max-h-[88dvh] min-h-[560px] overflow-hidden rounded-[24px] bg-frame text-ink shadow-[inset_0_0_0_1px_rgba(11,12,14,.1)]"}>
       <SitesMap
+        cooperative={!fill}
         sites={filteredSites}
         selectedSite={selectedSite}
         onSelectSite={select}

@@ -279,3 +279,17 @@
 .pv-select-list li svg{color:var(--acc-d)}
 @keyframes pv-pop{from{opacity:0;transform:translateY(-4px) scale(.98)}}
 @media (prefers-reduced-motion:reduce){.pv-select-list{animation:none}}
+
+/* Phones: the wide tables become stacked cards so no column is hidden off-screen. */
+.pv-cards{display:none;list-style:none;margin:0;padding:0}
+@media (max-width:700px){
+  .pv-table-wrap .pv-table{display:none}
+  .pv-cards{display:block}
+  .pv-cards li{padding:18px 0;border-bottom:1px solid rgba(11,12,14,.1)}
+  .pv-dark .pv-cards li{border-bottom-color:rgba(255,255,255,.14)}
+  .pv-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+  .pv-card-title{font-size:16px;font-weight:600;line-height:22px}
+  .pv-card-ref{font-family:"JetBrains Mono Variable",ui-monospace,monospace;font-size:12.5px;color:var(--text-2)}
+  .pv-card-meta{margin-top:6px;font-size:14px;line-height:21px;color:var(--text-2)}
+  .pv-card-row{display:flex;flex-wrap:wrap;gap:8px 16px;margin-top:10px;font-size:14px}
+}

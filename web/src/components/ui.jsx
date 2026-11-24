@@ -62,7 +62,7 @@ export function Float({ as: Tag = "div", className = "", ...props }) {
 
 /** Small uppercase mono label used for table headers and eyebrows. */
 export function Eyebrow({ className = "", ...props }) {
-  return <span className={`font-mono text-[10.5px] font-medium uppercase tracking-[0.08em] text-faint ${className}`} {...props} />;
+  return <span className={`font-mono text-[12px] font-medium uppercase tracking-[0.08em] text-faint sm:text-[10.5px] ${className}`} {...props} />;
 }
 
 /* ── Chips ─────────────────────────────────────────────────────────── */
@@ -77,7 +77,7 @@ const TONES = {
 
 export function Chip({ tone = "idle", className = "", children }) {
   return (
-    <span className={`inline-flex items-center rounded-md px-2 py-1 font-mono text-[10.5px] font-medium uppercase leading-none tracking-[0.05em] ${TONES[tone]} ${className}`}>
+    <span className={`inline-flex items-center rounded-md px-2 py-1 font-mono text-[12px] font-medium uppercase leading-none tracking-[0.05em] sm:text-[10.5px] ${TONES[tone]} ${className}`}>
       {children}
     </span>
   );
@@ -105,7 +105,7 @@ const BUTTON_VARIANTS = {
   ghost: "text-mute hover:bg-sunken hover:text-ink"
 };
 const BUTTON_SIZES = {
-  sm: "h-8 px-3.5 text-[12.5px]",
+  sm: "h-10 px-4 text-[13px] sm:h-8 sm:px-3.5 sm:text-[12.5px]",
   md: "h-10 px-5 text-[13.5px]",
   lg: "h-12 px-6 text-sm w-full"
 };
