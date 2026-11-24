@@ -78,7 +78,7 @@ function DecisionForm({ application, onDecided }) {
           <div className="rounded-xl bg-warn-soft px-4 py-3 text-[13px] text-warn">
             <p className="font-medium">{application.queuePosition - 1} earlier application(s) for this site are still waiting.</p>
             <label className="mt-2 flex items-start gap-2">
-              <input type="checkbox" className="mt-0.5" checked={override} onChange={(event) => setOverride(event.target.checked)} />
+              <input type="checkbox" className="mt-0.5 size-5 shrink-0" checked={override} onChange={(event) => setOverride(event.target.checked)} />
               <span>Approve out of queue order anyway. This is published as <em>out of queue order</em> and needs a reason of at least 20 characters.</span>
             </label>
           </div>

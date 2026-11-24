@@ -69,7 +69,7 @@ function createMarkerElement(site, isSelected) {
   return button;
 }
 
-export function SitesMap({ sites, selectedSite, onSelectSite, padding, shiftControls }) {
+export function SitesMap({ sites, selectedSite, onSelectSite, padding, shiftControls, cooperative = false }) {
   const containerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -85,6 +85,7 @@ export function SitesMap({ sites, selectedSite, onSelectSite, padding, shiftCont
       ...HOME,
       minZoom: 9,
       maxPitch: 70,
+      cooperativeGestures: cooperative,
       attributionControl: false
     });
     map.addControl(new maplibregl.AttributionControl({ compact: true }), "bottom-right");

@@ -88,7 +88,23 @@ export function AdminSitesPage() {
       {adding && <AddSiteForm onAdd={add} onCancel={() => setAdding(false)} />}
 
       <Card className="overflow-x-auto">
-        <table className="w-full min-w-[720px] border-collapse text-left">
+        <ul className="divide-y divide-line md:hidden">
+          {list.map((s) => (
+            <li key={s.id} className="grid gap-2 px-4 py-4">
+              <div className="flex items-start justify-between gap-3">
+                <div><p className="text-[14.5px] font-semibold">{s.name}</p><p className="font-mono text-[12px] text-mute">{s.reference}</p></div>
+                <StatusChip status={s.status} />
+              </div>
+              <p className="text-[13px] text-mute">{s.sector}, {s.district} · {s.size} · {s.type}</p>
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-[13.5px] font-medium tabular-nums">{formatRwf(s.fee)} / month</span>
+                {s.status !== "allocated" && <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
+              </div>
+            </li>
+          ))}
+          {!list.length && <li>{loading ? <SkeletonRows rows={3} /> : <p className="px-4 py-6 text-center text-[13px] text-mute">No sites yet.</p>}</li>}
+        </ul>
+        <table className="hidden w-full min-w-[720px] border-collapse text-left md:table">
           <caption className="sr-only">Vending sites</caption>
           <thead><tr className="border-b border-line">{["Reference", "Site", "Fee", "Status", ""].map((h, i) => <th key={i} scope="col" className="px-5 py-3"><Eyebrow>{h}</Eyebrow></th>)}</tr></thead>
           <tbody>

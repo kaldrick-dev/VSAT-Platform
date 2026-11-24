@@ -75,7 +75,7 @@ export function LoginPage() {
           </div>
 
           <h2>{isRegister ? "Create your vendor account" : "Welcome back"}</h2>
-          <p className="sub">{isRegister ? "Registration is for vendors. It takes a minute." : "Sign in to continue. Browsing spaces and the public records never needs an account."}</p>
+          <p className="sub">{isRegister ? "Registration is for vendors. It takes a minute." : "Sign in to continue. You can browse the site map without an account."}</p>
 
           <div className="pv-form">
             {isRegister && (

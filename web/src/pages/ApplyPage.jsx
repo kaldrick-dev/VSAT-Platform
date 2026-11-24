@@ -15,7 +15,7 @@ const buildStatement = ({ trade, experience, use }) =>
 
 function SiteSummary({ site }) {
   return (
-    <Card className="p-6 lg:sticky lg:top-6">
+    <Card className="order-first p-6 lg:sticky lg:top-6 lg:order-none">
       <div className="flex items-center gap-2">
         <StatusChip status={site.status} />
         <Eyebrow>{site.reference}</Eyebrow>
@@ -117,7 +117,7 @@ function ApplicationForm({ site, profile, documents, onSubmitted }) {
         <section className="grid gap-3">
           <h2 className="text-[15px] font-semibold">4. Confirm</h2>
           <label className="flex items-start gap-2.5 text-[13.5px]">
-            <input type="checkbox" className="mt-1" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+            <input type="checkbox" className="mt-0.5 size-5 shrink-0" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
             <span>I have read the published terms and fee for this site and the details above are true. I understand my place in the queue is set by the time I submit.</span>
           </label>
           {error && <p role="alert" className="text-[13px] text-red-600">{error}</p>}

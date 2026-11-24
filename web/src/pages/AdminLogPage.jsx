@@ -38,7 +38,21 @@ export function AdminLogPage() {
           <Segmented label="Outcome" value={outcome} onChange={setOutcome} options={[["all", "All"], ["Approved", "Approved"], ["Rejected", "Rejected"]]} />
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[920px] border-collapse text-left">
+          <ul className="divide-y divide-line md:hidden">
+            {rows.map((d) => (
+              <li key={d.id} className="grid gap-2 px-4 py-4 text-[13.5px]">
+                <div className="flex items-start justify-between gap-3">
+                  <div><p className="font-semibold">{d.site}</p><p className="font-mono text-[12px] text-mute">{d.id} · {formatDay(d.date)}</p></div>
+                  <Chip tone={d.outcome === "Approved" ? "good" : "bad"}>{d.outcome}</Chip>
+                </div>
+                <p className="text-mute">{d.applicant} · {d.application}</p>
+                <p className="tabular-nums">Queue {d.queue}{d.outOfOrder && <> <Chip tone="bad">Out of order</Chip></>}</p>
+                <p className="leading-relaxed text-mute">{d.reason}</p>
+                <p className="text-[12.5px] text-mute">Decided by {d.by}</p>
+              </li>
+            ))}
+          </ul>
+          <table className="hidden w-full min-w-[920px] border-collapse text-left md:table">
             <caption className="sr-only">Decision log, newest first</caption>
             <thead><tr className="border-y border-line">{COLUMNS.map(([k, h]) => <th key={k} scope="col" className="px-5 py-2.5"><Eyebrow>{h}</Eyebrow></th>)}</tr></thead>
             <tbody>
