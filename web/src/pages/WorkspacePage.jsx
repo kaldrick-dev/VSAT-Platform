@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Button, Chip, Icon, Page, PageHeader, Ring } from "../components/ui.jsx";
+import { Button, Chip, Eyebrow, Icon, Page, PageHeader, Ring } from "../components/ui.jsx";
 import { formatRwf } from "../data/sites.js";
 import { useSites } from "../hooks/useSites.js";
 import { useApi } from "../hooks/useApi.js";
@@ -15,7 +15,7 @@ const TONE = { up: "text-good", down: "text-bad", flat: "text-faint" };
 /** Soft tinted card: no border, no shadow. The page is white, so the tint does the separating. */
 function Tile({ label, value, delta, tone = "flat", highlight = false }) {
   return (
-    <div className={`rounded-2xl p-5 ${highlight ? "bg-accent-soft" : "bg-frame"}`}>
+    <div className={`p-5`}>
       <p className={`text-[13px] ${highlight ? "text-accent" : "text-mute"}`}>{label}</p>
       <p className="mt-2 flex items-baseline gap-2">
         <span className={`text-[34px] font-semibold leading-none tracking-[-0.03em] tabular-nums ${highlight ? "text-accent" : ""}`}>{value}</span>
@@ -31,7 +31,7 @@ function Tiles({ children }) {
 
 function Panel({ title, description, action, children, className = "" }) {
   return (
-    <section className={`rounded-2xl bg-frame p-2 ${className}`}>
+    <section className={`rounded-2xl p-2 ${className}`}>
       <div className="flex items-start justify-between gap-3 px-3.5 pb-2 pt-3.5">
         <div>
           <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
@@ -76,11 +76,36 @@ function OpenSpaces({ title }) {
   const { sites } = useSites();
   const OPEN = sites.filter((site) => site.status === "available");
   return (
-    <Panel title={title} description={`${OPEN.length} spaces are accepting applications.`} action={<Button variant="ghost" size="sm" to="/sites">Open map</Button>}>
-      {OPEN.map((site) => (
-        <Row key={site.id} to="/sites" primary={site.name} secondary={`${site.sector}, ${site.district} · ${site.size}`}
-          end={<span className="text-[13px] font-medium tabular-nums">{formatRwf(site.fee)}</span>} />
-      ))}
+    <Panel title={title} description={OPEN.length === 1 ? "1 space is accepting applications." : `${OPEN.length} spaces are accepting applications.`} action={<Button variant="ghost" size="sm" to="/sites">Open map</Button>}>
+      <div className="overflow-x-auto rounded-xl bg-surface">
+        <table className="w-full min-w-[360px] border-collapse text-left">
+          <caption className="sr-only">Vending spaces open for applications</caption>
+          <thead>
+            <tr className="border-b border-line">
+              <th scope="col" className="px-4 py-2.5"><Eyebrow className="text-mute">Space</Eyebrow></th>
+              <th scope="col" className="hidden px-4 py-2.5 2xl:table-cell"><Eyebrow className="text-mute">Location</Eyebrow></th>
+              <th scope="col" className="hidden whitespace-nowrap px-4 py-2.5 sm:table-cell"><Eyebrow className="text-mute">Size</Eyebrow></th>
+              <th scope="col" className="whitespace-nowrap px-4 py-2.5 text-right"><Eyebrow className="text-mute">Fee / month</Eyebrow></th>
+              <th scope="col" className="px-4 py-2.5"><span className="sr-only">Action</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {OPEN.map((site) => (
+              <tr key={site.id} className="border-b border-line last:border-b-0 transition hover:bg-sunken/60">
+                <th scope="row" className="px-4 py-3 text-left font-normal">
+                  <span className="block text-[13.5px] font-medium">{site.name}</span>
+                  <span className="mt-0.5 block text-xs text-mute">{site.reference}<span className="2xl:hidden"> · {site.sector}, {site.district}</span></span>
+                </th>
+                <td className="hidden px-4 py-3 text-[13px] text-mute 2xl:table-cell">{site.sector}, {site.district}</td>
+                <td className="hidden whitespace-nowrap px-4 py-3 text-[13px] text-mute sm:table-cell">{site.size}</td>
+                <td className="whitespace-nowrap px-4 py-3 text-right text-[13px] font-medium tabular-nums">{formatRwf(site.fee)}</td>
+                <td className="px-4 py-3 text-right"><Button variant="secondary" size="sm" to={`/sites/${site.id}/apply`}>Apply</Button></td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!OPEN.length && <p className="px-4 py-3 text-[13px] text-mute">No spaces are open right now.</p>}
+      </div>
     </Panel>
   );
 }
@@ -107,9 +132,9 @@ function VendorOverview({ name }) {
 
       <Tiles>
         <Tile label="Active applications" value={pending.length} />
-        <Tile label="Queue position" value={application ? `#${application.queuePosition}` : "None"} delta={application ? application.site.name : "no pending application"} highlight />
+        <Tile label="Queue position" value={application ? `#${application.queuePosition}` : "-"} delta={application ? application.site.name : "no pending application"} highlight />
         <Tile label="Open spaces" value={OPEN.length} delta="to apply for" tone="up" />
-        <Tile label="My flags open" value={openFlags} delta={openFlags ? "awaiting review" : "none"} />
+        <Tile label="My flags open" value={openFlags} delta={openFlags ? "awaiting review" : "-"} />
       </Tiles>
 
       <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">

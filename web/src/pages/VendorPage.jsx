@@ -54,7 +54,7 @@ export function VendorPage() {
           { label: "Pending", value: count("pending") },
           { label: "Approved", value: count("approved"), tone: "up" },
           { label: "Rejected", value: count("rejected") },
-          { label: "Next position", value: next ? `#${next.queuePosition}` : "None" }
+          { label: "Next position", value: next ? `#${next.queuePosition}` : "-" }
         ]}
       />
 
