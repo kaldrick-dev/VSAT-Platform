@@ -1,10 +1,13 @@
 import { Router } from "express";
+import { requireAuth } from "../../middleware/auth.js";
 import { validate } from "../../middleware/validate.js";
 import { toCsv } from "../../utils/csv.js";
 import { formatSchema, summarySchema } from "./public.schemas.js";
 import * as publicService from "./public.service.js";
 
 export const publicRoutes = Router();
+
+publicRoutes.use(requireAuth);
 
 const send = (res, format, name, rows) => {
   if (format === "csv") {

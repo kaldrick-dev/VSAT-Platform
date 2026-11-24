@@ -4,7 +4,7 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 
 | Actor | Account | Lands on after sign-in | Can see |
 |---|---|---|---|
-| Public viewer | none | `/` | Home and the site map only. The allocation record needs a sign-in (web); the open-data API endpoints stay public |
+| Public viewer | none | `/` | Home and the site map only. The allocation record needs a sign-in (web); the open-data API endpoints (`/public/*`) also need a token |
 | Vendor | yes (`vendor`) | `/workspace` | Everything public, plus their own applications and queue positions |
 | Admin | yes (`admin`) | `/workspace` | Everything public, plus the full application queue and decision entry |
 
@@ -45,8 +45,8 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | `GET/PATCH /profile` | yes | vendor | |
 | `GET/POST /documents`, `DELETE /documents/:id` | yes | vendor | Own documents |
 | `GET /vendors/:id/documents` | yes | admin | |
-| `GET /public/summary` | no | any | Counts only: allocations (total, out of queue order, by district) and flags (raised, answered, on time, overdue, upheld, average days to answer). Accepts `from` and `to` |
-| `GET /public/spaces`, `/public/activity`, `/public/flags` | no | any | Spaces and events only. `?format=csv` downloads CSV. `activity` and `flags` accept `from` and `to` (YYYY-MM-DD). `activity` shows queue position, queue size, an out-of-order marker and a reason category, never names or free-text reasons |
+| `GET /public/summary` | yes | vendor, admin | Counts only: allocations (total, out of queue order, by district) and flags (raised, answered, on time, overdue, upheld, average days to answer). Accepts `from` and `to` |
+| `GET /public/spaces`, `/public/activity`, `/public/flags` | yes | vendor, admin | Spaces and events only. `?format=csv` downloads CSV. `activity` and `flags` accept `from` and `to` (YYYY-MM-DD). `activity` shows queue position, queue size, an out-of-order marker and a reason category, never names or free-text reasons |
 
 ## Field exposure (NFR 7)
 
