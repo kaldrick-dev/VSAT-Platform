@@ -275,7 +275,7 @@ export function StatStrip({ items, loading = false, className = "" }) {
   return (
     <div className={`grid sm:grid-flow-col sm:auto-cols-fr max-sm:grid-cols-2 ${className}`}>
       {items.map(({ label, value, delta, tone = "flat" }) => (
-        <div key={label} className="px-5 py-5 first:pl-0">
+        <div key={label} className="px-5 py-5 max-sm:px-0 max-sm:py-3.5 sm:first:pl-0">
           <p className="text-[12.5px] text-mute">{label}</p>
           <p className="mt-1 flex items-baseline gap-2">
             {loading ? <Skeleton className="h-[30px] w-12" /> : <span className="text-[30px] font-semibold leading-none tracking-[-0.03em] tabular-nums">{value}</span>}
