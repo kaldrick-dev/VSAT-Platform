@@ -273,7 +273,7 @@ const DELTA_TONE = { up: "text-good", down: "text-bad", flat: "text-faint" };
 /** Metrics on an open row separated by hairlines — no enclosing box. */
 export function StatStrip({ items, className = "" }) {
   return (
-    <div className={`grid divide-line border-y border-line sm:grid-flow-col sm:auto-cols-fr sm:divide-x max-sm:grid-cols-2 ${className}`}>
+    <div className={`grid sm:grid-flow-col sm:auto-cols-fr max-sm:grid-cols-2 ${className}`}>
       {items.map(({ label, value, delta, tone = "flat" }) => (
         <div key={label} className="px-5 py-5 first:pl-0">
           <p className="text-[12.5px] text-mute">{label}</p>
