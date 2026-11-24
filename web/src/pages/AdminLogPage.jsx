@@ -6,11 +6,11 @@ import { api } from "../lib/api.js";
 import { formatDay } from "../lib/format.js";
 import { downloadFile, toCsv } from "../lib/download.js";
 
-const COLUMNS = [["id", "Reference"], ["date", "Date"], ["site", "Site"], ["outcome", "Outcome"], ["application", "Application"], ["applicant", "Applicant"], ["reason", "Stated reason"], ["by", "Decided by"]];
+const COLUMNS = [["id", "Reference"], ["date", "Date"], ["site", "Site"], ["outcome", "Outcome"], ["application", "Application"], ["applicant", "Applicant"], ["queue", "Queue"], ["reason", "Stated reason"], ["by", "Decided by"]];
 
 const toRow = (a) => ({
   id: shortId("EV", a.id), date: a.decidedAt.slice(0, 10), site: a.site.name, outcome: a.outcome === "approved" ? "Approved" : "Rejected",
-  application: shortId("APP", a.application.id), applicant: a.application.vendor.fullName, reason: a.reason, by: a.decidedBy
+  application: shortId("APP", a.application.id), applicant: a.application.vendor.fullName, reason: a.reason, queue: a.queuePosition ? `${a.queuePosition} of ${a.waitingCount}` : "n/a", outOfOrder: a.outOfOrder, by: a.decidedBy
 });
 
 export function AdminLogPage() {
@@ -50,6 +50,7 @@ export function AdminLogPage() {
                   <td className="px-5 py-3.5"><Chip tone={d.outcome === "Approved" ? "good" : "bad"}>{d.outcome}</Chip></td>
                   <td className="px-5 py-3.5 font-mono text-[12.5px]">{d.application}</td>
                   <td className="px-5 py-3.5 text-[13px]">{d.applicant}</td>
+                  <td className="whitespace-nowrap px-5 py-3.5 text-[13px] tabular-nums">{d.queue}{d.outOfOrder && <> <Chip tone="bad">Out of order</Chip></>}</td>
                   <td className="max-w-[34ch] px-5 py-3.5 text-[13.5px] leading-relaxed text-mute">{d.reason}</td>
                   <td className="px-5 py-3.5 text-[13px]">{d.by}</td>
                 </tr>

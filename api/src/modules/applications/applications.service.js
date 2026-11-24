@@ -1,8 +1,8 @@
 import { prisma } from "../../lib/prisma.js";
 import { HttpError } from "../../utils/http-error.js";
 
-const queuePosition = (application) =>
-  prisma.application.count({
+const queuePosition = (application, db = prisma) =>
+  db.application.count({
     where: { siteId: application.siteId, status: "pending", appliedAt: { lte: application.appliedAt } }
   });
 
@@ -33,8 +33,8 @@ export const listMine = async (vendorId) => {
   );
 };
 
-export const listAll = (filters) =>
-  prisma.application.findMany({
+export const listAll = async (filters) => {
+  const applications = await prisma.application.findMany({
     where: filters,
     include: {
       site: { select: { name: true, reference: true } },
@@ -42,27 +42,51 @@ export const listAll = (filters) =>
     },
     orderBy: { appliedAt: "asc" }
   });
+  if (filters.status !== "pending") return applications;
 
-export const decide = async (adminId, id, { outcome, reason }) => {
+  const seen = {};
+  return applications.map((a) => {
+    seen[a.siteId] = (seen[a.siteId] ?? 0) + 1;
+    return { ...a, queuePosition: seen[a.siteId] };
+  });
+};
+
+export const decide = async (adminId, id, { outcome, reason, reasonCategory, outOfOrder }) => {
   const application = await prisma.application.findUnique({ where: { id }, include: { site: true } });
   if (!application) throw new HttpError(404, "not_found", "Application not found");
   if (application.status !== "pending") throw new HttpError(409, "already_decided", "This application was already decided");
+  if (outcome === "approved" && application.site.status !== "available") throw new HttpError(409, "site_unavailable", "This site is not open for allocation");
 
-  const [updated] = await prisma.$transaction([
-    prisma.application.update({ where: { id }, data: { status: outcome } }),
-    prisma.allocation.create({
-      data: { siteId: application.siteId, applicationId: id, outcome, reason, decidedById: adminId }
-    }),
-    prisma.notification.create({
+  return prisma.$transaction(async (tx) => {
+    const position = await queuePosition(application, tx);
+    const waiting = await tx.application.count({ where: { siteId: application.siteId, status: "pending" } });
+    const skipped = outcome === "approved" && position > 1;
+    if (skipped && !outOfOrder) {
+      throw new HttpError(409, "out_of_queue_order", `${position - 1} earlier application(s) are still waiting. Decide them first, or confirm an override with a full reason.`, { position });
+    }
+
+    const updated = await tx.application.update({ where: { id }, data: { status: outcome } });
+    await tx.allocation.create({
+      data: {
+        siteId: application.siteId,
+        applicationId: id,
+        outcome,
+        reason,
+        reasonCategory: skipped ? "override" : reasonCategory,
+        queuePosition: position,
+        waitingCount: waiting,
+        outOfOrder: skipped,
+        decidedById: adminId
+      }
+    });
+    await tx.notification.create({
       data: {
         userId: application.vendorId,
         title: `Application ${outcome}`,
         body: `Your application for ${application.site.name} was ${outcome}. Reason: ${reason}`
       }
-    }),
-    ...(outcome === "approved"
-      ? [prisma.site.update({ where: { id: application.siteId }, data: { status: "allocated" } })]
-      : [])
-  ]);
-  return updated;
+    });
+    if (outcome === "approved") await tx.site.update({ where: { id: application.siteId }, data: { status: "allocated" } });
+    return updated;
+  });
 };
