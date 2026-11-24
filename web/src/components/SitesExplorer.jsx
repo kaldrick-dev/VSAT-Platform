@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { SitesMap } from "./SitesMap.jsx";
 import { SitePreview } from "./SitePreview.jsx";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth.jsx";
-import { Button, Chip, Dropdown, EmptyState, Eyebrow, Field, Float, Icon, Segmented, StatusChip, fieldClass } from "./ui.jsx";
-import { api } from "../lib/api.js";
+import { Button, Dropdown, EmptyState, Eyebrow, Float, Icon, Segmented, StatusChip } from "./ui.jsx";
 import { useSites } from "../hooks/useSites.js";
 import { districts, formatRwf } from "../data/sites.js";
 
@@ -48,6 +48,7 @@ function SiteRow({ site, selected, onSelect }) {
 }
 
 function SiteDetail({ site, onClose, onApply }) {
+  const { role } = useAuth();
   const [expanded, setExpanded] = useState(false);
   useEffect(() => setExpanded(false), [site.id]);
 
@@ -79,7 +80,9 @@ function SiteDetail({ site, onClose, onApply }) {
       </div>
 
       <div className="mt-4 px-1">
-        {site.status === "available" ? (
+        {site.status === "available" && role === "admin" ? (
+          <p className="rounded-2xl bg-sunken px-4 py-3 text-center text-[13px] text-mute">Administrators cannot apply for sites.</p>
+        ) : site.status === "available" ? (
           <Button size="lg" onClick={() => onApply(site)}>
             <Icon name="clock" className="size-4" />
             Apply · {site.queue} ahead
@@ -118,91 +121,6 @@ function SiteDetail({ site, onClose, onApply }) {
   );
 }
 
-function ApplicationDialog({ site, onClose }) {
-  const { role } = useAuth();
-  const [statement, setStatement] = useState("");
-  const [position, setPosition] = useState(null);
-  const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-
-  async function submit(event) {
-    event.preventDefault();
-    if (role !== "vendor") return;
-    setBusy(true);
-    setError("");
-    try {
-      const { data } = await api.applyToSite(site.id, { statement: statement || undefined });
-      setPosition(data.queuePosition);
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setBusy(false);
-    }
-  }
-  return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-ink/40 p-4 backdrop-blur-sm"
-      role="presentation"
-      onMouseDown={onClose}
-    >
-      <form
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="application-title"
-        className="relative grid w-full max-w-md gap-5 rounded-[26px] bg-surface p-6 shadow-float"
-        onMouseDown={(event) => event.stopPropagation()}
-        onSubmit={submit}
-      >
-        <button type="button" onClick={onClose} aria-label="Close application" className="absolute right-4 top-4 grid size-8 place-items-center rounded-full bg-sunken transition hover:bg-line">
-          <Icon name="close" className="size-3.5" />
-        </button>
-
-        <div className="pr-10">
-          <Chip tone="good">Timestamped application</Chip>
-          <h2 id="application-title" className="mt-3 text-xl font-semibold tracking-[-0.015em]">Apply for {site.name}</h2>
-          <p className="mt-1.5 text-[13.5px] leading-relaxed text-mute">
-            Your submission time sets your place in the public queue. <strong className="font-medium text-ink">{site.queue} applicants</strong> are ahead of you.
-          </p>
-        </div>
-
-        <Field label="Why is this site suitable for your trade?">
-          <textarea
-            autoFocus
-            rows="4"
-            value={statement}
-            onChange={(event) => setStatement(event.target.value)}
-            placeholder="Briefly describe what you sell and how you will use the space."
-            className={`${fieldClass} h-auto resize-y py-2.5`}
-          />
-        </Field>
-
-        <div className="flex items-center justify-between rounded-2xl bg-sunken px-4 py-3 text-[13.5px]">
-          <span className="text-mute">Published fee</span>
-          <strong className="font-medium tabular-nums">{formatRwf(site.fee)} / month</strong>
-        </div>
-        {error && <p role="alert" className="text-center text-[13px] text-red-600">{error}</p>}
-
-        <div className="grid gap-2.5">
-          {role === "vendor" ? (
-            <Button size="lg" type="submit" disabled={busy || position !== null}>
-              {position !== null ? `Submitted: you are #${position} in the queue` : busy ? "Submitting…" : "Submit application"}
-              <Icon name="arrow" className="size-4" />
-            </Button>
-          ) : role === "admin" ? (
-            <p className="rounded-2xl bg-sunken px-4 py-3 text-center text-[13px] text-mute">Administrators cannot apply for sites.</p>
-          ) : (
-            <Button size="lg" to="/login?next=/%23map">
-              Sign in to submit
-              <Icon name="arrow" className="size-4" />
-            </Button>
-          )}
-          <p className="text-center text-xs text-faint">No payment is collected on this platform.</p>
-        </div>
-      </form>
-    </div>
-  );
-}
-
 /** Interactive site registry map with filters, list and detail. Used on the public home page. */
 export default function SitesExplorer({ query = "", fill = false }) {
   const wide = useIsWide();
@@ -210,7 +128,7 @@ export default function SitesExplorer({ query = "", fill = false }) {
   const [status, setStatus] = useState("all");
   const [district, setDistrict] = useState("all");
   const [selectedSite, setSelectedSite] = useState(null);
-  const [applicationSite, setApplicationSite] = useState(null);
+  const navigate = useNavigate();
   const [showList, setShowList] = useState(wide);
 
   const filteredSites = useMemo(() => {
@@ -230,12 +148,6 @@ export default function SitesExplorer({ query = "", fill = false }) {
   useEffect(() => {
     if (selectedSite && !filteredSites.some((site) => site.id === selectedSite.id)) setSelectedSite(null);
   }, [filteredSites, selectedSite]);
-
-  useEffect(() => {
-    const onKeyDown = (event) => { if (event.key === "Escape") setApplicationSite(null); };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, []);
 
   function select(site) {
     setSelectedSite(site);
@@ -298,7 +210,7 @@ export default function SitesExplorer({ query = "", fill = false }) {
         </Float>
       )}
 
-      {selectedSite && <SiteDetail site={selectedSite} onClose={() => setSelectedSite(null)} onApply={setApplicationSite} />}
+      {selectedSite && <SiteDetail site={selectedSite} onClose={() => setSelectedSite(null)} onApply={(site) => navigate(`/sites/${site.id}/apply`)} />}
 
       {/* Legend */}
       <div className="pointer-events-none absolute bottom-3 left-[372px] z-10 hidden items-center gap-4 rounded-full bg-surface px-4 py-2 text-xs font-medium shadow-card xl:flex">
@@ -310,7 +222,6 @@ export default function SitesExplorer({ query = "", fill = false }) {
         ))}
       </div>
 
-      {applicationSite && <ApplicationDialog site={applicationSite} onClose={() => setApplicationSite(null)} />}
     </section>
   );
 }
