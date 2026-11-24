@@ -16,7 +16,7 @@ const ORDER = { available: 0, allocated: 1, inactive: 2 };
 
 export function RecordsPage() {
   const [params] = useSearchParams();
-  const { spaces: sites, activity: statusLog, flags, loading, error } = usePublicData();
+  const { spaces: sites, activity: statusLog, flags, summary, loading, error } = usePublicData();
   const lastUpdated = latestDate(statusLog, flags);
   const [search, setSearch] = useState(params.get("q") ?? "");
   const [status, setStatus] = useState("all");
@@ -99,6 +99,37 @@ export function RecordsPage() {
         </div>
       </section>
 
+      {summary && (
+        <section className="pv-sec" id="accountability" aria-labelledby="accountability-h">
+          <div className="pv-wrap">
+            <div className="pv-head pv-rv">
+              <div>
+                <span className="pv-eyebrow"><i />Accountability</span>
+                <h2 id="accountability-h" className="pv-h2">At a glance</h2>
+              </div>
+              <p className="pv-muted">Flags should be answered within 7 days. These figures count every flag raised and every allocation recorded.</p>
+            </div>
+            <dl className="pv-rv" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(190px, 1fr))", gap: 24 }}>
+              {[
+                ["Spaces allocated", summary.allocations.total],
+                ["Allocated out of queue order", summary.allocations.outOfOrder],
+                ["Flags raised", summary.flags.raised],
+                ["Flags answered on time", `${summary.flags.answeredOnTime} of ${summary.flags.answered}`],
+                ["Flags overdue", summary.flags.overdue],
+                ["Average days to answer", summary.flags.averageDaysToAnswer ?? "n/a"]
+              ].map(([label, value]) => (
+                <div key={label}><dd style={{ fontSize: 40, fontWeight: 600, lineHeight: 1 }}>{value}</dd><dt className="pv-muted" style={{ marginTop: 8 }}>{label}</dt></div>
+              ))}
+            </dl>
+            {!!summary.allocations.byDistrict.length && (
+              <p className="pv-muted pv-rv" style={{ marginTop: 24 }}>
+                Allocations by district: {summary.allocations.byDistrict.map((d) => `${d.district} ${d.count}`).join(" · ")}
+              </p>
+            )}
+          </div>
+        </section>
+      )}
+
       <section className="pv-sec pv-dark" id="activity" aria-labelledby="activity-h">
         <div className="pv-wrap">
           <div className="pv-head pv-rv">
@@ -145,12 +176,12 @@ export function RecordsPage() {
               <span className="pv-eyebrow"><i />Questions raised</span>
               <h2 id="flags-h" className="pv-h2">Flag log</h2>
             </div>
-            <p className="pv-muted">Registered vendors can flag an allocation they believe did not follow the stated rules. Only the category, date and status are public.</p>
+            <p className="pv-muted">Registered vendors can flag an allocation they believe did not follow the stated rules. Only the category, dates and status are public, along with whether the answer was on time.</p>
           </div>
           <div className="pv-table-wrap pv-rv">
             <table className="pv-table">
               <caption className="sr-only">Flags raised against allocations</caption>
-              <thead><tr>{["Reference", "Activity entry", "Date raised", "Category", "Status"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
+              <thead><tr>{["Reference", "Activity entry", "Date raised", "Category", "Status", "Answer due", "Answered in"].map((h) => <th key={h} scope="col">{h}</th>)}</tr></thead>
               <tbody>
                 {flags.map((f) => (
                   <tr key={f.id}>
@@ -158,7 +189,9 @@ export function RecordsPage() {
                     <td className="mono">{shortId("EV", f.allocationId)}</td>
                     <td style={{ whiteSpace: "nowrap" }}>{formatDate(f.date)}</td>
                     <td>{f.category}</td>
-                    <td><span className={`pv-pill ${FLAG_TONE[f.status]}`}>{FLAG_LABEL[f.status]}</span></td>
+                    <td><span className={`pv-pill ${FLAG_TONE[f.status]}`}>{FLAG_LABEL[f.status]}</span>{f.overdue && <> <span className="pv-pill bad">Overdue</span></>}</td>
+                    <td style={{ whiteSpace: "nowrap" }}>{formatDate(f.dueDate)}</td>
+                    <td>{f.daysToAnswer === null ? "Waiting" : `${f.daysToAnswer} days`}</td>
                   </tr>
                 ))}
               </tbody>

@@ -1,10 +1,13 @@
 import { prisma } from "../../lib/prisma.js";
 import { HttpError } from "../../utils/http-error.js";
 
+export const RESPONSE_DAYS = 7;
+
 export const createFlag = async (vendorId, allocationId, data) => {
   const allocation = await prisma.allocation.findUnique({ where: { id: allocationId } });
   if (!allocation) throw new HttpError(404, "not_found", "Allocation not found");
-  return prisma.flag.create({ data: { ...data, allocationId, vendorId } });
+  const dueAt = new Date(Date.now() + RESPONSE_DAYS * 24 * 60 * 60 * 1000);
+  return prisma.flag.create({ data: { ...data, allocationId, vendorId, dueAt } });
 };
 
 export const listMine = (vendorId) =>

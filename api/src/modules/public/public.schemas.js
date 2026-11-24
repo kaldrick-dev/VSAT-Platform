@@ -7,3 +7,5 @@ export const formatSchema = z.object({
   from: day.optional(),
   to: day.optional()
 });
+
+export const summarySchema = z.object({ from: day.optional(), to: day.optional() });

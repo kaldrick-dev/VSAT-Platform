@@ -48,6 +48,8 @@ test("vendor creates a flag", async () => {
   const res = await request(app).post(`/api/v1/allocations/${allocationId}/flags`).set("Authorization", `Bearer ${vendorToken}`).send({ category: "Queue order", note: "Skipped the queue" });
   assert.equal(res.status, 201);
   assert.equal(res.body.data.status, "open");
+  const days = (new Date(res.body.data.dueAt) - new Date(res.body.data.createdAt)) / 86400000;
+  assert.ok(Math.abs(days - 7) < 0.01);
   flagId = res.body.data.id;
 });
 

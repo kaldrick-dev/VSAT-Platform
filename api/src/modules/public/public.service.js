@@ -43,13 +43,50 @@ export const listActivity = async (filters = {}) => {
   }));
 };
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const daysBetween = (start, end) => Math.round(((end - start) / DAY_MS) * 10) / 10;
+
 export const listFlags = async (filters = {}) => {
   const flags = await prisma.flag.findMany({ where: { createdAt: dateRange(filters) }, orderBy: { createdAt: "desc" } });
+  const now = new Date();
   return flags.map((f) => ({
     id: f.id,
     allocationId: f.allocationId,
     date: f.createdAt.toISOString().slice(0, 10),
     category: f.category,
-    status: f.status
+    status: f.status,
+    dueDate: f.dueAt.toISOString().slice(0, 10),
+    overdue: f.status === "open" && f.dueAt < now,
+    daysToAnswer: f.reviewedAt ? daysBetween(f.createdAt, f.reviewedAt) : null
   }));
+};
+
+export const getSummary = async (filters = {}) => {
+  const range = dateRange(filters);
+  const [allocations, flags] = await Promise.all([
+    prisma.allocation.findMany({ where: { outcome: "approved", decidedAt: range }, include: { site: { select: { district: true } } } }),
+    prisma.flag.findMany({ where: { createdAt: range } })
+  ]);
+
+  const byDistrict = {};
+  allocations.forEach((a) => { byDistrict[a.site.district] = (byDistrict[a.site.district] ?? 0) + 1; });
+
+  const answered = flags.filter((f) => f.reviewedAt);
+  const days = answered.map((f) => daysBetween(f.createdAt, f.reviewedAt));
+  const now = new Date();
+  return {
+    allocations: {
+      total: allocations.length,
+      outOfOrder: allocations.filter((a) => a.outOfOrder).length,
+      byDistrict: Object.entries(byDistrict).map(([district, count]) => ({ district, count })).sort((a, b) => b.count - a.count)
+    },
+    flags: {
+      raised: flags.length,
+      answered: answered.length,
+      answeredOnTime: answered.filter((f) => f.reviewedAt <= f.dueAt).length,
+      overdue: flags.filter((f) => f.status === "open" && f.dueAt < now).length,
+      upheld: flags.filter((f) => f.status === "upheld").length,
+      averageDaysToAnswer: days.length ? Math.round((days.reduce((sum, d) => sum + d, 0) / days.length) * 10) / 10 : null
+    }
+  };
 };

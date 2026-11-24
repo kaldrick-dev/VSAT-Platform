@@ -136,7 +136,7 @@ The map uses the free OpenFreeMap style, so no map key is needed.
 - **`Can't reach database server` or sign-in fails:** check `docker compose ps` shows the database as healthy, and that `DATABASE_URL` in `api/.env` uses port `5433`.
 - **`Environment variable not found: DATABASE_URL`:** you have not created `api/.env`. Run step 2.
 - **Port already in use:** stop whatever uses 4000 or 5173, or change `PORT` in `api/.env`.
-- **Tests fail with a missing table:** run the two test setup commands above.
+- **Tests fail with a missing table or column:** run `npm run test:setup -w @vsat/api` again after pulling new migrations (and the `createdb` command if you never ran it).
 - **Sign-in worked, then everything shows "Authentication required":** the token lasts one hour. Sign in again.
 
 ## Project layout

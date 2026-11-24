@@ -43,6 +43,7 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | `GET/PATCH /profile` | yes | vendor | |
 | `GET/POST /documents`, `DELETE /documents/:id` | yes | vendor | Own documents |
 | `GET /vendors/:id/documents` | yes | admin | |
+| `GET /public/summary` | no | any | Counts only: allocations (total, out of queue order, by district) and flags (raised, answered, on time, overdue, upheld, average days to answer). Accepts `from` and `to` |
 | `GET /public/spaces`, `/public/activity`, `/public/flags` | no | any | Spaces and events only. `?format=csv` downloads CSV. `activity` and `flags` accept `from` and `to` (YYYY-MM-DD). `activity` shows queue position, queue size, an out-of-order marker and a reason category, never names or free-text reasons |
 
 ## Field exposure (NFR 7)

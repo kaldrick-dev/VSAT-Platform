@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { validate } from "../../middleware/validate.js";
 import { toCsv } from "../../utils/csv.js";
-import { formatSchema } from "./public.schemas.js";
+import { formatSchema, summarySchema } from "./public.schemas.js";
 import * as publicService from "./public.service.js";
 
 export const publicRoutes = Router();
@@ -22,3 +22,7 @@ for (const [name, load] of Object.entries(datasets)) {
     send(res, req.query.format, name, await load(req.query));
   });
 }
+
+publicRoutes.get("/summary", validate({ query: summarySchema }), async (req, res) => {
+  res.json({ data: await publicService.getSummary(req.query) });
+});
