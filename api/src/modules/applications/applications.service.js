@@ -37,7 +37,7 @@ export const listAll = async (filters) => {
   const applications = await prisma.application.findMany({
     where: filters,
     include: {
-      site: { select: { name: true, reference: true } },
+      site: { select: { name: true, reference: true, fee: true } },
       vendor: { select: { id: true, fullName: true, email: true, trade: true, _count: { select: { documents: true } } } }
     },
     orderBy: { appliedAt: "asc" }
