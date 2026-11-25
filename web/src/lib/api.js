@@ -24,6 +24,33 @@ export async function downloadDataset(name, format) {
   URL.revokeObjectURL(link.href);
 }
 
+export const ALLOWED_FILE_TYPES = ["application/pdf", "image/png", "image/jpeg"];
+export const MAX_FILE_BYTES = 4 * 1024 * 1024;
+
+// A file is sent as the raw request body, so it needs its own fetch instead of the JSON helper.
+export async function uploadDocument(file, { kind, name }) {
+  const params = new URLSearchParams({ kind, fileName: file.name, ...(name ? { name } : {}) });
+  const res = await fetch(`${BASE_URL}/documents?${params}`, {
+    method: "POST",
+    headers: { "Content-Type": file.type, Authorization: `Bearer ${auth.get()}` },
+    body: file
+  });
+  const payload = await res.json().catch(() => null);
+  if (!res.ok) throw new ApiError(res.status, payload?.message ?? "The upload failed", payload?.details);
+  return payload;
+}
+
+// Files need the token too, so they are fetched and saved instead of opened as a plain link.
+export async function downloadDocument(document) {
+  const res = await fetch(`${BASE_URL}/documents/${document.id}/file`, { headers: { Authorization: `Bearer ${auth.get()}` } });
+  if (!res.ok) throw new Error("Could not download this file. Please sign in again.");
+  const link = window.document.createElement("a");
+  link.href = URL.createObjectURL(await res.blob());
+  link.download = document.fileName;
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
 export class ApiError extends Error {
   constructor(status, message, details) {
     super(message);
@@ -94,7 +121,6 @@ export const api = {
   profile: () => request("/profile"),
   updateProfile: (data) => request("/profile", { method: "PATCH", body: data }),
   myDocuments: () => request("/documents"),
-  addDocument: (data) => request("/documents", { method: "POST", body: data }),
   deleteDocument: (id) => request(`/documents/${id}`, { method: "DELETE" }),
   vendorDocuments: (vendorId) => request(`/vendors/${vendorId}/documents`),
 

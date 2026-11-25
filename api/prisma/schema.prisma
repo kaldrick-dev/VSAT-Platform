@@ -158,7 +158,11 @@ model Document {
   userId    String   @map("user_id")
   name      String
   kind      String
-  url       String
+  url       String?
+  fileName  String?  @map("file_name")
+  mimeType  String?  @map("mime_type")
+  size      Int?
+  data      Bytes?
   createdAt DateTime @default(now()) @map("created_at")
 
   user User @relation(fields: [userId], references: [id])
