@@ -32,6 +32,7 @@ Actors from the SRS / Appendix B (vendor, admin, public viewer, plus the associa
 | `GET /auth/me` | yes | any | |
 | `GET /sites`, `GET /sites/:id` | no | any | Filters: `district`, `type`, `status` |
 | `POST /sites`, `PATCH /sites/:id` | yes | admin | |
+| `DELETE /sites/:id` | yes | admin | Removes a site from the map and every list (soft delete; its decisions stay in the log). 409 if the site is allocated (revoke first) or has pending applications |
 | `POST /sites/:siteId/applications` | yes | vendor | One application per vendor per site; site must be `available` |
 | `PATCH /applications/:id/withdraw` | yes | vendor | Own pending application only. Leaves the queue; the vendor may apply again later and joins at the back. 409 once decided |
 | `GET /applications/me` | yes | vendor | Own applications with `queuePosition` |
