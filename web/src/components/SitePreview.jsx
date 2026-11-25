@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import * as maplibregl from "maplibre-gl";
+import { maplibregl } from "../lib/maplibre.js";
 import { MAP_STYLE } from "./SitesMap.jsx";
 
 /** A tilted, non-interactive close-up of a site, clipped to a hexagon like the reference card. */

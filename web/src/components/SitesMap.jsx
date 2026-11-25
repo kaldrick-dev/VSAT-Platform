@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import * as maplibregl from "maplibre-gl";
+import { maplibregl } from "../lib/maplibre.js";
 import { Icon } from "./ui.jsx";
 
 export const KIGALI_CENTER = [30.0725, -1.9606];
