@@ -36,7 +36,7 @@ export function MyFlagsPage() {
 
   return (
     <Page>
-      <PageHeader title="My flags" description="If an allocation did not follow the published rules, flag it here. An administrator reviews every flag." />
+      <PageHeader title="My flags" description="If an allocation did not follow the published rules, flag it here. An administrator reviews every flag within 7 days." />
       <div className="grid items-start gap-5 lg:grid-cols-[1fr_1.1fr]">
         <Card className="p-6">
           <h2 className="text-[15px] font-semibold">Flag an allocation</h2>

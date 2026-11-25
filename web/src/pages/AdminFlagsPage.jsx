@@ -31,7 +31,7 @@ function FlagCard({ flag, onReviewed }) {
         <span className="text-xs text-mute">{flag.category} · {flag.allocation.site.name} ({shortId("EV", flag.allocationId)}) · {formatDay(flag.createdAt)}</span>
       </div>
       <p className="mt-2.5 text-[13.5px] leading-relaxed">{flag.note}</p>
-      <p className="mt-1 flex items-center gap-1.5 text-xs text-faint"><Icon name="lock" className="size-3" />Raised by {flag.vendor.fullName}. Not shown publicly.</p>
+      <p className="mt-1 flex items-center gap-1.5 text-xs text-faint"><Icon name="lock" className="size-3" />Raised by {flag.vendor.fullName}{flag.vendor.organisation ? ` (${flag.vendor.organisation})` : ""}. Not shown publicly.</p>
 
       {closed ? (
         <p className="mt-3 rounded-xl bg-sunken px-3 py-2 text-[13px] text-mute">Outcome note (sent to the vendor): {flag.reviewNote}</p>

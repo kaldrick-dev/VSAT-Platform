@@ -32,6 +32,14 @@ describe("access policy", () => {
       expect(canAccess(page(path), ROLES.PUBLIC)).toBe(false);
     }
   });
+  it("lets association representatives read and flag, but not apply or manage", () => {
+    for (const path of ["/workspace", "/sites", "/flags", "/notifications", "/help"]) {
+      expect(canAccess(page(path), ROLES.ASSOCIATION)).toBe(true);
+    }
+    for (const path of ["/vendor", "/profile", "/admin", "/admin/sites", "/admin/flags", "/admin/log"]) {
+      expect(canAccess(page(path), ROLES.ASSOCIATION)).toBe(false);
+    }
+  });
   it("does not list public records in the workspace", () => {
     expect(PAGES.some((p) => p.path === "/records")).toBe(false);
   });

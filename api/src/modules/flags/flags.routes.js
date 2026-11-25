@@ -6,11 +6,11 @@ import * as flagsService from "./flags.service.js";
 
 export const flagsRoutes = Router();
 
-flagsRoutes.post("/allocations/:allocationId/flags", requireAuth, requireRole("vendor"), validate({ params: allocationIdSchema, body: createFlagSchema }), async (req, res) => {
+flagsRoutes.post("/allocations/:allocationId/flags", requireAuth, requireRole("vendor", "association"), validate({ params: allocationIdSchema, body: createFlagSchema }), async (req, res) => {
   res.status(201).json({ data: await flagsService.createFlag(req.user.sub, req.params.allocationId, req.body) });
 });
 
-flagsRoutes.get("/flags/me", requireAuth, requireRole("vendor"), async (req, res) => {
+flagsRoutes.get("/flags/me", requireAuth, requireRole("vendor", "association"), async (req, res) => {
   res.json({ data: await flagsService.listMine(req.user.sub) });
 });
 

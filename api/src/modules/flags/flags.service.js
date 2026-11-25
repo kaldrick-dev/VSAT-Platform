@@ -17,7 +17,7 @@ export const listAll = (filters) =>
   prisma.flag.findMany({
     where: filters,
     include: {
-      vendor: { select: { fullName: true, email: true } },
+      vendor: { select: { fullName: true, email: true, role: true, organisation: true } },
       allocation: { select: { site: { select: { name: true } } } }
     },
     orderBy: { createdAt: "desc" }
