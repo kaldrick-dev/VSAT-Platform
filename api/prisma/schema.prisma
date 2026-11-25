@@ -11,6 +11,7 @@ datasource db {
 enum Role {
   vendor
   admin
+  association
 }
 
 enum SiteStatus {
@@ -47,6 +48,7 @@ model User {
   role         Role     @default(vendor)
   trade        String?
   phone        String?
+  organisation String?
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
 

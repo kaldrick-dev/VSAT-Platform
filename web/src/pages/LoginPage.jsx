@@ -24,7 +24,7 @@ export function LoginPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const [mode, setMode] = useState("login");
-  const [form, setForm] = useState({ fullName: "", email: "", password: "" });
+  const [form, setForm] = useState({ fullName: "", email: "", password: "", accountType: "vendor", organisation: "" });
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -40,7 +40,7 @@ export function LoginPage() {
     setError("");
     setBusy(true);
     try {
-      const { token, user } = isRegister ? await api.register(form) : await api.login({ email: form.email, password: form.password });
+      const { token, user } = isRegister ? await api.register({ fullName: form.fullName, email: form.email, password: form.password, accountType: form.accountType, ...(form.accountType === "association" ? { organisation: form.organisation.trim() } : {}) }) : await api.login({ email: form.email, password: form.password });
       signIn({ token, user });
       navigate(landing(user.role), { replace: true });
     } catch (err) {
@@ -74,10 +74,23 @@ export function LoginPage() {
             <button type="button" role="tab" aria-selected={isRegister} onClick={() => { setMode("register"); setError(""); }}>Create account</button>
           </div>
 
-          <h2>{isRegister ? "Create your vendor account" : "Welcome back"}</h2>
-          <p className="sub">{isRegister ? "Registration is for vendors. It takes a minute." : "Sign in to continue. You can browse the site map without an account."}</p>
+          <h2>{isRegister ? (form.accountType === "association" ? "Create your association account" : "Create your vendor account") : "Welcome back"}</h2>
+          <p className="sub">{isRegister ? (form.accountType === "association" ? "Association representatives can read the allocation record and flag allocations. It takes a minute." : "Vendors apply for spaces and follow their queue. It takes a minute.") : "Sign in to continue. You can browse the site map without an account."}</p>
 
           <div className="pv-form">
+            {isRegister && (
+              <div className="pv-in">I am a
+                <div className="pv-choice" role="group" aria-label="Account type">
+                  <button type="button" aria-pressed={form.accountType === "vendor"} onClick={() => setForm({ ...form, accountType: "vendor" })}>Vendor</button>
+                  <button type="button" aria-pressed={form.accountType === "association"} onClick={() => setForm({ ...form, accountType: "association" })}>Association representative</button>
+                </div>
+              </div>
+            )}
+            {isRegister && form.accountType === "association" && (
+              <label className="pv-in">Organisation
+                <input required autoComplete="organization" minLength={2} value={form.organisation} onChange={set("organisation")} placeholder="e.g. Kigali Vendors Association" />
+              </label>
+            )}
             {isRegister && (
               <label className="pv-in">Full name
                 <input required autoComplete="name" value={form.fullName} onChange={set("fullName")} placeholder="Your name" />

@@ -1,10 +1,11 @@
 # Access control (RBAC)
 
-Three actors from the SRS / Appendix B. Public viewers have no account. Public data is about **spaces, not people**. Vendors and admins sign in; the role is in the JWT (`role` claim) and is **enforced by the API**. The web app only hides UI and guards routes for convenience (`web/src/lib/access.js`).
+Actors from the SRS / Appendix B (vendor, admin, public viewer, plus the association representative named in FR 5.1). Public viewers have no account. Public data is about **spaces, not people**. Vendors and admins sign in; the role is in the JWT (`role` claim) and is **enforced by the API**. The web app only hides UI and guards routes for convenience (`web/src/lib/access.js`).
 
 | Actor | Account | Lands on after sign-in | Can see |
 |---|---|---|---|
 | Public viewer | none | `/` | Home and the site map only. The allocation record needs a sign-in (web); the open-data API endpoints (`/public/*`) also need a token |
+| Association representative | yes (`association`) | `/workspace` | Everything public, plus the allocation record, flagging any allocation and their own flags. Cannot apply, has no queue or vendor data |
 | Vendor | yes (`vendor`) | `/workspace` | Everything public, plus their own applications and queue positions |
 | Admin | yes (`admin`) | `/workspace` | Everything public, plus the full application queue and decision entry |
 
@@ -26,7 +27,7 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | Endpoint | Auth | Roles | Notes |
 |---|---|---|---|
 | `GET /health` | no | any | |
-| `POST /auth/register` | no | any | Always creates a `vendor`; `role` in the body is ignored |
+| `POST /auth/register` | no | any | Creates a `vendor`, or an `association` representative when `accountType` is `association` (needs an `organisation`). Admins can never be created here: they come from the seed only |
 | `POST /auth/login` | no | any | Returns `{ token, user }` |
 | `GET /auth/me` | yes | any | |
 | `GET /sites`, `GET /sites/:id` | no | any | Filters: `district`, `type`, `status` |
@@ -37,8 +38,8 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | `PATCH /applications/:id` | yes | admin | `{ outcome: approved or rejected, reason, reasonCategory?, outOfOrder? }`. Writes an allocation entry and notifies the vendor. Approving an application that is not first in its site queue returns 409 unless `outOfOrder: true` with a reason of 20+ characters; the entry records queue position, queue size and the override |
 | `POST /sites/:siteId/revoke` | yes | admin | `{ reason (20+ characters), reasonCategory? }`. Adds a `revoked` entry to the log (the approval is never edited), reopens the site, marks the application revoked and notifies the vendor. 409 if the site has no active allocation |
 | `GET /allocations` | yes | admin, vendor | Admin: full log. Vendor: own entries only. Insert-only |
-| `POST /allocations/:allocationId/flags` | yes | vendor | `{ category, note }` |
-| `GET /flags/me` | yes | vendor | |
+| `POST /allocations/:allocationId/flags` | yes | vendor, association | `{ category, note }` |
+| `GET /flags/me` | yes | vendor, association | |
 | `GET /flags` | yes | admin | Filter: `status` |
 | `PATCH /flags/:id` | yes | admin | `{ status: upheld or dismissed, reviewNote }`. Notifies the vendor |
 | `GET /notifications` | yes | any | Own, with `unread` count |

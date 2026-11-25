@@ -31,7 +31,7 @@ export function App() {
         {/* Public site: open to everyone */}
         <Route element={<PublicLayout />}>
           <Route index element={<HomePage />} />
-          <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ADMIN]} />}>
+          <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ADMIN, ROLES.ASSOCIATION]} />}>
             <Route path="records" element={<RecordsPage />} />
           </Route>
           <Route path="dashboard" element={<Navigate to="/records" replace />} />
@@ -39,7 +39,7 @@ export function App() {
 
         {/* App shell: role-restricted workspaces only (the API enforces the same rules) */}
         <Route element={<Layout />}>
-          <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ADMIN]} />}>
+          <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ADMIN, ROLES.ASSOCIATION]} />}>
             <Route path="workspace" element={<WorkspacePage />} />
             <Route path="notifications" element={<NotificationsPage />} />
             <Route path="sites/:id/record" element={<SiteRecordPage />} />
@@ -49,8 +49,10 @@ export function App() {
           <Route element={<RequireRole roles={[ROLES.VENDOR]} />}>
             <Route path="sites/:id/apply" element={<ApplyPage />} />
             <Route path="vendor" element={<VendorPage />} />
-            <Route path="flags" element={<MyFlagsPage />} />
             <Route path="profile" element={<ProfilePage />} />
+          </Route>
+          <Route element={<RequireRole roles={[ROLES.VENDOR, ROLES.ASSOCIATION]} />}>
+            <Route path="flags" element={<MyFlagsPage />} />
           </Route>
           <Route element={<RequireRole roles={[ROLES.ADMIN]} />}>
             <Route path="admin" element={<AdminPage />} />

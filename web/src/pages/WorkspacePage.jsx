@@ -249,9 +249,37 @@ function AdminOverview({ name }) {
   );
 }
 
+function AssociationOverview({ name, organisation }) {
+  const { data: flags, loading } = useApi(useCallback(() => api.myFlags().then((res) => res.data), []), []);
+  const open = flags.filter((f) => f.status === "open").length;
+  const answered = flags.filter((f) => f.status !== "open").length;
+  return (
+    <Page>
+      <PageHeader title={`Welcome, ${name}`} description={organisation ? `Representing ${organisation}. Read the allocation record and flag anything that broke the published rules.` : "Read the allocation record and flag anything that broke the published rules."} actions={<Button to="/flags">Flag an allocation<Icon name="arrow" className="size-4" /></Button>} />
+
+      <Tiles>
+        <Tile loading={loading} label="Flags raised" value={flags.length} />
+        <Tile loading={loading} label="Awaiting an answer" value={open} tone={open ? "down" : "flat"} />
+        <Tile loading={loading} label="Answered" value={answered} />
+      </Tiles>
+
+      <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_1fr]">
+        <RecentUpdates role="association" />
+        <QuickActions items={[
+          ["/flags", "Flag an allocation", "Report a decision that broke the rules"],
+          ["/records", "Read the allocation record", "Decisions, queue order and flags"],
+          ["/sites", "Open the site map", "Check locations and status"]
+        ]} />
+      </div>
+    </Page>
+  );
+}
+
 /** The workspace's own home: an overview that adapts to the signed-in role. */
 export function WorkspacePage() {
   const { user, role } = useAuth();
   const name = (user?.name ?? user?.email ?? "").split(" ")[0] || "back";
-  return role === ROLES.ADMIN ? <AdminOverview name={name} /> : <VendorOverview name={name} />;
+  if (role === ROLES.ADMIN) return <AdminOverview name={name} />;
+  if (role === ROLES.ASSOCIATION) return <AssociationOverview name={name} organisation={user?.organisation} />;
+  return <VendorOverview name={name} />;
 }

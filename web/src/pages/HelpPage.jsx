@@ -12,6 +12,12 @@ const FAQ = {
     ["What can the public see about me?", "Nothing personal. The public sees which spaces are open and dated changes to them, never vendor or applicant names."],
     ["Do I pay through this platform?", "No. The platform records decisions only. Fees are paid outside it."]
   ],
+  association: [
+    ["What can an association representative do?", "Read the allocation record and flag any allocation you believe did not follow the published rules. You cannot apply for spaces or see vendor details."],
+    ["How do I flag an allocation?", "Go to My flags, choose the allocation, pick a category and explain what went wrong. An administrator reviews it and answers within 7 days."],
+    ["Who sees my flag?", "Administrators see your name and organisation. The public sees only the category, dates and status."],
+    ["Can I apply for a space for a member?", "No. Each vendor applies with their own account so the queue stays one person, one application."]
+  ],
   admin: [
     ["In what order should I review applications?", "Oldest first. The Application queue is sorted by submission time, and positions are fixed by that timestamp."],
     ["Can I edit or delete a decision?", "No. Decisions are append-only. To correct a mistake, record a new decision. The earlier entry stays as written."],
@@ -36,7 +42,7 @@ function Item({ q, a }) {
 
 export function HelpPage() {
   const { role } = useAuth();
-  const items = FAQ[role === ROLES.ADMIN ? "admin" : "vendor"];
+  const items = FAQ[role === ROLES.ADMIN ? "admin" : role === ROLES.ASSOCIATION ? "association" : "vendor"];
   return (
     <Page>
       <PageHeader title="Help" description="Short answers to common questions." />
