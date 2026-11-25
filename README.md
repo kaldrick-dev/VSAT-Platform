@@ -109,7 +109,7 @@ This runs the API tests (they need the Docker database from step 3 running) and 
 | `npm test` | Runs all tests |
 | `npm run db:migrate -w @vsat/api` | Applies schema changes to your local database |
 | `npm run db:seed -w @vsat/api` | Adds the demo accounts and sites |
-| `npm run db:migrate:deploy -w @vsat/api` | Applies existing migrations to a hosted database |
+| `npm run db:migrate:deploy -w @vsat/api` | Applies existing migrations to a hosted database (uses `DIRECT_URL` when set) |
 
 ## Configuration
 
@@ -117,7 +117,8 @@ This runs the API tests (they need the Docker database from step 3 running) and 
 
 | Variable | Default | Notes |
 |---|---|---|
-| `DATABASE_URL` | `postgresql://vsat:vsat@localhost:5433/vsat` | PostgreSQL connection string |
+| `DATABASE_URL` | `postgresql://vsat:vsat@localhost:5433/vsat` | PostgreSQL connection string the running app uses. On a hosted database use the **pooled** address |
+| `DIRECT_URL` | not set | Hosted databases only: the **direct** address (no `-pooler` in the host), used only for migrations. Falls back to `DATABASE_URL` |
 | `JWT_SECRET` | development value | At least 32 characters. **Required in production** |
 | `JWT_EXPIRES_IN` | `1h` | How long a sign-in lasts |
 | `PORT` | `4001` | API port |
@@ -137,6 +138,7 @@ The map uses the free OpenFreeMap style, so no map key is needed.
 - **`Environment variable not found: DATABASE_URL`:** you have not created `api/.env`. Run step 2.
 - **Port already in use:** stop whatever uses 4001 or 5173, or change `PORT` in `api/.env`.
 - **Tests fail with a missing table or column:** run `npm run test:setup -w @vsat/api` again after pulling new migrations (and the `createdb` command if you never ran it).
+- **`P1002 ... advisory lock` when migrating a hosted database:** you ran the migration over the pooled address. Set `DIRECT_URL` (same host without `-pooler`) in `api/.env` and run it again. If it still times out, an interrupted earlier migration is probably still holding Prisma's lock (it shows as an idle session). End that session in the database's SQL editor (look for an idle session holding advisory lock `72707369` in `pg_locks`, then `select pg_terminate_backend(<pid>);`) or restart the database's compute, and run the migration again.
 - **Sign-in worked, then everything shows "Authentication required":** the token lasts one hour. Sign in again.
 
 ## Project layout
@@ -167,10 +169,10 @@ Who can see what is described in [docs/ACCESS.md](docs/ACCESS.md). The coding st
 
 One Vercel project serves the web app as static files and the Express API as a serverless function at `/api/v1`. Both share one origin, so no CORS setup is needed. `vercel.json` defines this.
 
-1. Create a hosted PostgreSQL database (for example on Neon). Prefer the pooled connection string.
+1. Create a hosted PostgreSQL database (for example on Neon). Neon gives two addresses: a **pooled** one (the host contains `-pooler`) and a **direct** one (the same host without `-pooler`). Keep both.
 2. Import the repository in Vercel. Keep the root directory as the repository root and the framework preset as "Other". The build settings come from `vercel.json`.
-3. Add environment variables: `DATABASE_URL` and `JWT_SECRET` (at least 32 random characters). Optional: `JWT_EXPIRES_IN`.
-4. Create the tables once, from your machine. Put the hosted `DATABASE_URL` in `api/.env`, then run `npm run db:migrate:deploy -w @vsat/api`. Optionally run `npm run db:seed -w @vsat/api`, then change the demo passwords.
+3. Add environment variables in Vercel: `DATABASE_URL` set to the **pooled** address, and `JWT_SECRET` (at least 32 random characters). Optional: `JWT_EXPIRES_IN`. Do not add `DIRECT_URL` to Vercel; it is only for migrations.
+4. Create the tables from your machine, and again after any new migration. In `api/.env` put the pooled address as `DATABASE_URL` and the direct address as `DIRECT_URL`, then run `npm run db:migrate:deploy -w @vsat/api`. Optionally run `npm run db:seed -w @vsat/api`, then change the demo passwords.
 5. Deploy. The web app calls `/api/v1/...` on the same domain.
 
 `prisma generate` runs on install, and the schema includes the Linux binary target Vercel needs.
