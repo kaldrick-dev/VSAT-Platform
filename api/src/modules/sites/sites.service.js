@@ -11,13 +11,13 @@ const toSite = ({ _count, ...site }) => ({
 });
 
 export const listSites = async (filters) => {
-  const sites = await prisma.site.findMany({ where: filters, include: withQueue, orderBy: { reference: "asc" } });
+  const sites = await prisma.site.findMany({ where: { ...filters, removedAt: null }, include: withQueue, orderBy: { reference: "asc" } });
   return sites.map(toSite);
 };
 
 export const getSite = async (id) => {
   const site = await prisma.site.findUnique({ where: { id }, include: withQueue });
-  if (!site) throw new HttpError(404, "not_found", "Site not found");
+  if (!site || site.removedAt) throw new HttpError(404, "not_found", "Site not found");
   return toSite(site);
 };
 
@@ -30,4 +30,12 @@ export const createSite = async (data) => {
 export const updateSite = async (id, data) => {
   await getSite(id);
   return toSite(await prisma.site.update({ where: { id }, data, include: withQueue }));
+};
+
+// A removed site leaves the map and the lists, but its decisions stay in the insert-only log.
+export const removeSite = async (id) => {
+  const site = await getSite(id);
+  if (site.status === "allocated") throw new HttpError(409, "site_allocated", "Revoke the allocation before removing this site");
+  if (site.queue > 0) throw new HttpError(409, "has_pending_applications", "Decide the pending applications before removing this site");
+  await prisma.site.update({ where: { id }, data: { removedAt: new Date() } });
 };

@@ -9,4 +9,5 @@ export const sitesRoutes = Router();
 sitesRoutes.get("/", validate({ query: listSitesSchema }), controller.list);
 sitesRoutes.get("/:id", validate({ params: idSchema }), controller.get);
 sitesRoutes.post("/", requireAuth, requireRole("admin"), validate({ body: createSiteSchema }), controller.create);
+sitesRoutes.delete("/:id", requireAuth, requireRole("admin"), validate({ params: idSchema }), controller.remove);
 sitesRoutes.patch("/:id", requireAuth, requireRole("admin"), validate({ params: idSchema, body: updateSiteSchema }), controller.update);
