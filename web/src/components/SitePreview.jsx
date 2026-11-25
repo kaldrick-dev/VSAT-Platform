@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { maplibregl } from "../lib/maplibre.js";
-import { MAP_STYLE } from "./SitesMap.jsx";
+import { MAP_STYLE, fallBackToOpenStyle, maplibregl } from "../lib/maplibre.js";
 
 /** A tilted, non-interactive close-up of a site, clipped to a hexagon like the reference card. */
 export function SitePreview({ site }) {
@@ -19,6 +18,7 @@ export function SitePreview({ site }) {
       fadeDuration: 0
     });
     map.on("styleimagemissing", () => {});
+    map.on("error", (event) => { if (!event.sourceId && !event.tile) fallBackToOpenStyle(map); });
     return () => map.remove();
   }, [site.id, site.longitude, site.latitude]);
 

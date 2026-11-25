@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
-import { maplibregl } from "../lib/maplibre.js";
-import { MAP_STYLE } from "./SitesMap.jsx";
+import { MAP_STYLE, fallBackToOpenStyle, maplibregl } from "../lib/maplibre.js";
 
 /** Click the map to choose a site's coordinates (FR 1.3). value/onChange: { latitude, longitude }. */
 export default function LocationPicker({ value, onChange }) {
@@ -13,6 +12,7 @@ export default function LocationPicker({ value, onChange }) {
   useEffect(() => {
     const instance = new maplibregl.Map({ container: box.current, style: MAP_STYLE, center: [30.0619, -1.9441], zoom: 11.2, attributionControl: { compact: true } });
     instance.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
+    instance.on("error", (event) => { if (!event.sourceId && !event.tile) fallBackToOpenStyle(instance); });
     instance.getCanvas().style.cursor = "crosshair";
     instance.on("click", (e) => change.current({ latitude: +e.lngLat.lat.toFixed(6), longitude: +e.lngLat.lng.toFixed(6) }));
     map.current = instance;
