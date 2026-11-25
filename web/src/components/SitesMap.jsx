@@ -1,11 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { maplibregl } from "../lib/maplibre.js";
+import { MAP_STYLE, fallBackToOpenStyle, maplibregl } from "../lib/maplibre.js";
 import { Icon } from "./ui.jsx";
 
 export const KIGALI_CENTER = [30.0725, -1.9606];
 
-// OpenFreeMap "Bright": keyless vector basemap with 3D buildings once you zoom in and tilt.
-export const MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
 const HOME = { center: KIGALI_CENTER, zoom: 11.6, pitch: 50, bearing: -12 };
 
 /* Hexagon markers — one visual language per status:
@@ -94,7 +92,7 @@ export function SitesMap({ sites, selectedSite, onSelectSite, padding, shiftCont
     map.once("load", () => setStatus("ready"));
     map.on("error", (event) => {
       // Single tile failures are expected on weak connections; only a failed style is fatal.
-      if (!event.sourceId && !event.tile) setStatus("error");
+      if (!event.sourceId && !event.tile && !fallBackToOpenStyle(map, () => setStatus("ready"))) setStatus("error");
       console.warn("[map]", event.error?.message);
     });
     mapRef.current = map;

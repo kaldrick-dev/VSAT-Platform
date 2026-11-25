@@ -129,8 +129,9 @@ This runs the API tests (they need the Docker database from step 3 running) and 
 | Variable | Default | Notes |
 |---|---|---|
 | `VITE_API_BASE_URL` | `/api/v1` | Leave as is unless the API is on another domain |
+| `VITE_MAPTILER_API_KEY` | not set | Optional MapTiler key for the basemap. Without it the map uses OpenFreeMap |
 
-The map uses the free OpenFreeMap style, so no map key is needed.
+The map works without a key (it uses the free OpenFreeMap style). If that host is blocked on your network, set `VITE_MAPTILER_API_KEY` in `web/.env` (locally) or in the Vercel project settings (deployed) to use a MapTiler basemap instead. In the MapTiler dashboard, restrict the key to `localhost` and your Vercel domain, because it is visible in the browser. If the keyed style cannot load, the map falls back to OpenFreeMap by itself.
 
 ## Troubleshooting
 
