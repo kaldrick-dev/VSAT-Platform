@@ -8,7 +8,7 @@ const queuePosition = (application, db = prisma) =>
 
 export const apply = async (vendorId, siteId, { statement }) => {
   const site = await prisma.site.findUnique({ where: { id: siteId } });
-  if (!site) throw new HttpError(404, "not_found", "Site not found");
+  if (!site || site.removedAt) throw new HttpError(404, "not_found", "Site not found");
   if (site.status !== "available") throw new HttpError(409, "site_unavailable", "This site is not open for applications");
 
   const existing = await prisma.application.findUnique({ where: { siteId_vendorId: { siteId, vendorId } } });

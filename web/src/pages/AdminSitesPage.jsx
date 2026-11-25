@@ -61,6 +61,38 @@ function RevokeForm({ site, onDone, onCancel }) {
   );
 }
 
+function RemoveConfirm({ site, onDone, onCancel }) {
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const panel = useRef(null);
+
+  useEffect(() => { panel.current?.scrollIntoView({ behavior: "smooth", block: "start" }); }, []);
+
+  async function remove() {
+    setBusy(true);
+    setError("");
+    try {
+      await api.removeSite(site.id);
+      onDone();
+    } catch (err) {
+      setError(err.message);
+      setBusy(false);
+    }
+  }
+
+  return (
+    <Card ref={panel} className="p-6">
+      <h2 className="text-[15px] font-semibold">Remove {site.name} from the map?</h2>
+      <p className="mt-2 max-w-xl text-[13px] text-mute">The space disappears from the map, the site list and the public records. Its past decisions stay in the log, because the log cannot be edited or deleted. A site that is allocated must be revoked first, and one with pending applications needs those decided first.</p>
+      {error && <p role="alert" className="mt-3 text-[13px] text-red-600">{error}</p>}
+      <div className="mt-4 flex flex-wrap gap-2">
+        <Button disabled={busy} onClick={remove}>{busy ? "Removing…" : "Yes, remove it"}</Button>
+        <Button variant="secondary" disabled={busy} onClick={onCancel}>Keep it</Button>
+      </div>
+    </Card>
+  );
+}
+
 function AddSiteForm({ onAdd, onCancel }) {
   const [form, setForm] = useState(EMPTY);
   const set = (key) => (value) => setForm({ ...form, [key]: value?.target ? value.target.value : value });
@@ -105,6 +137,7 @@ export function AdminSitesPage() {
   const [error, setError] = useState("");
   const [adding, setAdding] = useState(params.get("new") === "1");
   const [revoking, setRevoking] = useState(null);
+  const [removing, setRemoving] = useState(null);
 
   const counts = { available: 0, allocated: 0, inactive: 0 };
   list.forEach((s) => { counts[s.status] += 1; });
@@ -135,10 +168,11 @@ export function AdminSitesPage() {
 
   return (
     <Page>
-      <PageHeader title="Manage sites" description="Publish new spaces, pause or reopen them, and revoke an allocation. Every change is recorded on the public activity log." actions={!adding && <Button onClick={() => setAdding(true)}><Icon name="plus" className="size-4" />Add vending site</Button>} />
+      <PageHeader title="Manage sites" description="Publish new spaces, pause or reopen them, revoke an allocation, or remove a space from the map. Every change is recorded on the public activity log." actions={!adding && <Button onClick={() => setAdding(true)}><Icon name="plus" className="size-4" />Add vending site</Button>} />
       <StatStrip loading={loading} items={[{ label: "Listed", value: list.length }, { label: "Available", value: counts.available, tone: "up" }, { label: "Allocated", value: counts.allocated }, { label: "Paused", value: counts.inactive }]} />
       {(error || loadError) && <p role="alert" className="text-[13px] text-red-600">{error || loadError}</p>}
       {adding && <AddSiteForm onAdd={add} onCancel={() => setAdding(false)} />}
+      {removing && <RemoveConfirm site={removing} onCancel={() => setRemoving(null)} onDone={() => { setRemoving(null); setError(""); reload(); }} />}
       {revoking && <RevokeForm site={revoking} onCancel={() => setRevoking(null)} onDone={() => { setRevoking(null); setError(""); reload(); }} />}
 
       <Card className="overflow-x-auto">
@@ -153,8 +187,8 @@ export function AdminSitesPage() {
               <div className="flex items-center justify-between gap-3">
                 <span className="text-[13.5px] font-medium tabular-nums">{formatRwf(s.fee)} / month</span>
                 {s.status === "allocated"
-                  ? <Button variant="secondary" size="sm" onClick={() => { setAdding(false); setRevoking(s); }}>Revoke</Button>
-                  : <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
+                  ? <Button variant="secondary" size="sm" onClick={() => { setAdding(false); setRemoving(null); setRevoking(s); }}>Revoke</Button>
+                  : <span className="flex gap-2"><Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button><Button variant="ghost" size="sm" onClick={() => { setAdding(false); setRevoking(null); setRemoving(s); }}>Remove</Button></span>}
               </div>
             </li>
           ))}
@@ -172,8 +206,8 @@ export function AdminSitesPage() {
                 <td className="px-5 py-3.5"><StatusChip status={s.status} /></td>
                 <td className="px-5 py-3.5 text-right">
                   {s.status === "allocated"
-                    ? <Button variant="secondary" size="sm" onClick={() => { setAdding(false); setRevoking(s); }}>Revoke</Button>
-                    : <Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button>}
+                    ? <Button variant="secondary" size="sm" onClick={() => { setAdding(false); setRemoving(null); setRevoking(s); }}>Revoke</Button>
+                    : <span className="inline-flex gap-2"><Button variant="secondary" size="sm" onClick={() => toggle(s)}>{s.status === "inactive" ? "Reopen" : "Pause"}</Button><Button variant="ghost" size="sm" onClick={() => { setAdding(false); setRevoking(null); setRemoving(s); }}>Remove</Button></span>}
                 </td>
               </tr>
             ))}

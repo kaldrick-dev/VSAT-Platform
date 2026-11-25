@@ -73,6 +73,7 @@ model Site {
   longitude Decimal    @db.Decimal(9, 6)
   terms     String
   status    SiteStatus @default(available)
+  removedAt DateTime?  @map("removed_at")
   createdAt DateTime   @default(now()) @map("created_at")
   updatedAt DateTime   @updatedAt @map("updated_at")
 

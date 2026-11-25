@@ -2,7 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 
 // Public data describes spaces and events, never people: no vendor, applicant or reason fields.
 export const listSpaces = async () => {
-  const sites = await prisma.site.findMany({ orderBy: { reference: "asc" } });
+  const sites = await prisma.site.findMany({ where: { removedAt: null }, orderBy: { reference: "asc" } });
   return sites.map((s) => ({
     reference: s.reference, name: s.name, district: s.district, sector: s.sector, status: s.status,
     type: s.type, size: s.size, fee: s.fee, latitude: Number(s.latitude), longitude: Number(s.longitude), terms: s.terms
