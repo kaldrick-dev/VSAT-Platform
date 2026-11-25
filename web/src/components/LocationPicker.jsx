@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import * as maplibregl from "maplibre-gl";
+import { maplibregl } from "../lib/maplibre.js";
 import { MAP_STYLE } from "./SitesMap.jsx";
 
 /** Click the map to choose a site's coordinates (FR 1.3). value/onChange: { latitude, longitude }. */
