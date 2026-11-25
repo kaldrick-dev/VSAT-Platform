@@ -2,18 +2,30 @@ import { useCallback, useState } from "react";
 import { Button, Chip, Dropdown, EmptyState, Eyebrow, Field, Icon, Page, PageHeader, StatStrip, fieldClass } from "../components/ui.jsx";
 import { useApi } from "../hooks/useApi.js";
 import { shortId } from "../hooks/usePublicData.js";
-import { api } from "../lib/api.js";
-import { formatDateTime, timeAgo } from "../lib/format.js";
+import { api, downloadDocument } from "../lib/api.js";
+import { formatDateTime, formatSize, timeAgo } from "../lib/format.js";
 import { formatRwf } from "../data/sites.js";
 
 function VendorDocuments({ vendorId }) {
   const call = useCallback(() => api.vendorDocuments(vendorId).then((res) => res.data), [vendorId]);
   const { data: docs } = useApi(call, []);
+  const [error, setError] = useState("");
   if (!docs.length) return <p className="text-[13px] text-mute">No documents attached.</p>;
   return (
-    <ul className="flex flex-wrap gap-2">
-      {docs.map((d) => <li key={d.id}><a className="text-[13px] underline underline-offset-2" href={d.url} target="_blank" rel="noreferrer">{d.name} ({d.kind})</a></li>)}
-    </ul>
+    <>
+      <ul className="grid gap-1.5">
+        {docs.map((d) => (
+          <li key={d.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+            <span className="font-medium">{d.name}</span>
+            <span className="text-mute">{d.kind}{d.size ? ` · ${formatSize(d.size)}` : ""}</span>
+            {d.fileName
+              ? <button type="button" className="underline underline-offset-2" onClick={() => downloadDocument(d).catch((err) => setError(err.message))}>Download</button>
+              : <a className="underline underline-offset-2" href={d.url} target="_blank" rel="noreferrer">Open link</a>}
+          </li>
+        ))}
+      </ul>
+      {error && <p role="alert" className="mt-1 text-[13px] text-red-600">{error}</p>}
+    </>
   );
 }
 

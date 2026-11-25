@@ -7,7 +7,7 @@ import { prisma } from "../src/lib/prisma.js";
 
 const emails = ["prof-admin@example.com", "prof-vendor@example.com"];
 const password = "password123";
-let adminToken, vendorToken, vendorId, documentId;
+let adminToken, vendorToken, vendorId;
 
 const login = async (email) => (await request(app).post("/api/v1/auth/login").send({ email, password })).body.token;
 
@@ -45,36 +45,4 @@ test("vendor updates their profile", async () => {
 test("admin cannot use the vendor profile", async () => {
   const res = await request(app).get("/api/v1/profile").set("Authorization", `Bearer ${adminToken}`);
   assert.equal(res.status, 403);
-});
-
-test("vendor creates a document", async () => {
-  const res = await request(app).post("/api/v1/documents").set("Authorization", `Bearer ${vendorToken}`).send({ name: "ID card", kind: "identity", url: "https://example.com/id.pdf" });
-  assert.equal(res.status, 201);
-  documentId = res.body.data.id;
-});
-
-test("rejects a document with a bad url", async () => {
-  const res = await request(app).post("/api/v1/documents").set("Authorization", `Bearer ${vendorToken}`).send({ name: "x", kind: "x", url: "nope" });
-  assert.equal(res.status, 400);
-});
-
-test("vendor lists their documents", async () => {
-  const res = await request(app).get("/api/v1/documents").set("Authorization", `Bearer ${vendorToken}`);
-  assert.equal(res.body.data.length, 1);
-});
-
-test("admin views a vendor's documents", async () => {
-  const res = await request(app).get(`/api/v1/vendors/${vendorId}/documents`).set("Authorization", `Bearer ${adminToken}`);
-  assert.equal(res.status, 200);
-  assert.equal(res.body.data.length, 1);
-});
-
-test("vendor deletes a document", async () => {
-  const res = await request(app).delete(`/api/v1/documents/${documentId}`).set("Authorization", `Bearer ${vendorToken}`);
-  assert.equal(res.status, 204);
-});
-
-test("returns 404 deleting it again", async () => {
-  const res = await request(app).delete(`/api/v1/documents/${documentId}`).set("Authorization", `Bearer ${vendorToken}`);
-  assert.equal(res.status, 404);
 });

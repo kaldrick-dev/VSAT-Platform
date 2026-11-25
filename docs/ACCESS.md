@@ -45,8 +45,10 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | `GET /notifications` | yes | any | Own, with `unread` count |
 | `PATCH /notifications/:id/read`, `POST /notifications/read-all` | yes | any | |
 | `GET/PATCH /profile` | yes | vendor | |
-| `GET/POST /documents`, `DELETE /documents/:id` | yes | vendor | Own documents |
-| `GET /vendors/:id/documents` | yes | admin | |
+| `GET /documents`, `DELETE /documents/:id` | yes | vendor | Own documents |
+| `POST /documents?kind=&fileName=&name=` | yes | vendor | Upload: the file is the raw request body (`Content-Type` application/pdf, image/png or image/jpeg, max 4 MB). The content is checked against the file signature. Stored in the database |
+| `GET /documents/:id/file` | yes | vendor (own), admin | Downloads the file; there is no public URL |
+| `GET /vendors/:id/documents` | yes | admin | Lists a vendor's documents (never the file bytes) |
 | `GET /public/summary` | yes | vendor, admin | Counts only: allocations (total, out of queue order, by district) and flags (raised, answered, on time, overdue, upheld, average days to answer). Accepts `from` and `to` |
 | `GET /public/spaces`, `/public/activity`, `/public/flags` | yes | vendor, admin | Spaces and events only. `?format=csv` downloads CSV. `activity` and `flags` accept `from` and `to` (YYYY-MM-DD). `activity` shows queue position, queue size, an out-of-order marker and a reason category, never names or free-text reasons |
 
