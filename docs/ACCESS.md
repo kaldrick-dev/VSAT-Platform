@@ -32,6 +32,7 @@ Three actors from the SRS / Appendix B. Public viewers have no account. Public d
 | `GET /sites`, `GET /sites/:id` | no | any | Filters: `district`, `type`, `status` |
 | `POST /sites`, `PATCH /sites/:id` | yes | admin | |
 | `POST /sites/:siteId/applications` | yes | vendor | One application per vendor per site; site must be `available` |
+| `PATCH /applications/:id/withdraw` | yes | vendor | Own pending application only. Leaves the queue; the vendor may apply again later and joins at the back. 409 once decided |
 | `GET /applications/me` | yes | vendor | Own applications with `queuePosition` |
 | `GET /applications` | yes | admin | Queue, oldest first, with vendor identity. Filters: `siteId`, `status` |
 | `PATCH /applications/:id` | yes | admin | `{ outcome: approved or rejected, reason, reasonCategory?, outOfOrder? }`. Writes an allocation entry and notifies the vendor. Approving an application that is not first in its site queue returns 409 unless `outOfOrder: true` with a reason of 20+ characters; the entry records queue position, queue size and the override |

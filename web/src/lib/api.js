@@ -75,6 +75,7 @@ export const api = {
   updateSite: (id, data) => request(`/sites/${id}`, { method: "PATCH", body: data }),
 
   applyToSite: (siteId, data) => request(`/sites/${siteId}/applications`, { method: "POST", body: data }),
+  withdrawApplication: (id) => request(`/applications/${id}/withdraw`, { method: "PATCH" }),
   myApplications: () => request("/applications/me"),
   listApplications: (filters) => request("/applications", { query: filters }),
   decideApplication: (id, data) => request(`/applications/${id}`, { method: "PATCH", body: data }),
