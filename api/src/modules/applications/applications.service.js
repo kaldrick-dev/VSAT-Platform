@@ -12,10 +12,20 @@ export const apply = async (vendorId, siteId, { statement }) => {
   if (site.status !== "available") throw new HttpError(409, "site_unavailable", "This site is not open for applications");
 
   const existing = await prisma.application.findUnique({ where: { siteId_vendorId: { siteId, vendorId } } });
-  if (existing) throw new HttpError(409, "already_applied", "You already applied to this site");
+  if (existing && existing.status !== "withdrawn") throw new HttpError(409, "already_applied", "You already applied to this site");
 
-  const application = await prisma.application.create({ data: { siteId, vendorId, statement } });
+  // Applying again after a withdrawal starts a new place at the back of the queue.
+  const application = existing
+    ? await prisma.application.update({ where: { id: existing.id }, data: { status: "pending", statement, appliedAt: new Date() } })
+    : await prisma.application.create({ data: { siteId, vendorId, statement } });
   return { ...application, queuePosition: await queuePosition(application) };
+};
+
+export const withdraw = async (vendorId, id) => {
+  const application = await prisma.application.findUnique({ where: { id } });
+  if (!application || application.vendorId !== vendorId) throw new HttpError(404, "not_found", "Application not found");
+  if (application.status !== "pending") throw new HttpError(409, "not_pending", "Only a pending application can be withdrawn");
+  return prisma.application.update({ where: { id }, data: { status: "withdrawn" } });
 };
 
 export const listMine = async (vendorId) => {

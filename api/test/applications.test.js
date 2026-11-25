@@ -72,3 +72,37 @@ test("admin cannot read vendor applications", async () => {
   const res = await request(app).get("/api/v1/applications/me").set("Authorization", `Bearer ${adminToken}`);
   assert.equal(res.status, 403);
 });
+
+test("another vendor cannot withdraw my application", async () => {
+  const mine = (await request(app).get("/api/v1/applications/me").set("Authorization", `Bearer ${vendor1Token}`)).body.data[0];
+  const res = await request(app).patch(`/api/v1/applications/${mine.id}/withdraw`).set("Authorization", `Bearer ${vendor2Token}`);
+  assert.equal(res.status, 404);
+});
+
+test("admin cannot withdraw an application", async () => {
+  const mine = (await request(app).get("/api/v1/applications/me").set("Authorization", `Bearer ${vendor1Token}`)).body.data[0];
+  const res = await request(app).patch(`/api/v1/applications/${mine.id}/withdraw`).set("Authorization", `Bearer ${adminToken}`);
+  assert.equal(res.status, 403);
+});
+
+test("vendor withdraws and the queue closes up", async () => {
+  const mine = (await request(app).get("/api/v1/applications/me").set("Authorization", `Bearer ${vendor1Token}`)).body.data[0];
+  const res = await request(app).patch(`/api/v1/applications/${mine.id}/withdraw`).set("Authorization", `Bearer ${vendor1Token}`);
+  assert.equal(res.status, 200);
+  assert.equal(res.body.data.status, "withdrawn");
+
+  const other = await request(app).get("/api/v1/applications/me").set("Authorization", `Bearer ${vendor2Token}`);
+  assert.equal(other.body.data[0].queuePosition, 1);
+});
+
+test("rejects withdrawing twice", async () => {
+  const mine = (await request(app).get("/api/v1/applications/me").set("Authorization", `Bearer ${vendor1Token}`)).body.data[0];
+  const res = await request(app).patch(`/api/v1/applications/${mine.id}/withdraw`).set("Authorization", `Bearer ${vendor1Token}`);
+  assert.equal(res.status, 409);
+});
+
+test("vendor can apply again after withdrawing and goes to the back", async () => {
+  const res = await request(app).post(`/api/v1/sites/${siteId}/applications`).set("Authorization", `Bearer ${vendor1Token}`).send({ statement: "Back again" });
+  assert.equal(res.status, 201);
+  assert.equal(res.body.data.queuePosition, 2);
+});

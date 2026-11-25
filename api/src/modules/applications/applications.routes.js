@@ -7,6 +7,7 @@ import { applySchema, decisionSchema, idSchema, listAllSchema, siteIdSchema } fr
 export const applicationsRoutes = Router();
 
 applicationsRoutes.post("/sites/:siteId/applications", requireAuth, requireRole("vendor"), validate({ params: siteIdSchema, body: applySchema }), controller.apply);
+applicationsRoutes.patch("/applications/:id/withdraw", requireAuth, requireRole("vendor"), validate({ params: idSchema }), controller.withdraw);
 applicationsRoutes.get("/applications/me", requireAuth, requireRole("vendor"), controller.listMine);
 applicationsRoutes.get("/applications", requireAuth, requireRole("admin"), validate({ query: listAllSchema }), controller.listAll);
 applicationsRoutes.patch("/applications/:id", requireAuth, requireRole("admin"), validate({ params: idSchema, body: decisionSchema }), controller.decide);
